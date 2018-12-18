@@ -19,6 +19,8 @@ buildscript {
 }
 
 apply plugin: 'kotlin'
+apply plugin: 'maven'
+
 
 sourceCompatibility = project.ext.javaVersion
 
@@ -33,7 +35,7 @@ dependencies {
 	// we need the jdk dependency instead of stdlib to have enhanced java features like tue 'use' function for try-with-resources
 	compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: project.ext.kotlin_version
 	compile "org.jetbrains.kotlin:kotlin-reflect:${project.ext.kotlin_version}" // because we need reflection to get annotated property values
-	compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+	compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:${project.ext.coroutines_version}"
 	compile 'com.natpryce:konfig:1.6.6.0'  // configuration library
 
 	testCompile group: 'junit', name: 'junit', version: '4.12'
@@ -44,15 +46,4 @@ compileKotlin {
 }
 compileTestKotlin {
 	kotlinOptions.jvmTarget = "${project.ext.javaVersion}"
-}
-
-task sourcesJar(type: Jar, dependsOn: "classes") {
-	classifier = 'sources'
-	from sourceSets.main.allJava
-	from sourceSets.main.allSource
-	from sourceSets.test.allSource
-}
-apply plugin: 'maven'
-artifacts {
-	archives sourcesJar
 }
