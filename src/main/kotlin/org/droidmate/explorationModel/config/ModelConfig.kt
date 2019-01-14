@@ -71,7 +71,7 @@ class ModelConfig private constructor(path: Path,
 	}
 
 	@Deprecated("to be removed")
-	fun widgetImgPath(id: UUID, postfix: String = "", fileExtension: String = ".png", interactive: Boolean): String {
+	fun widgetImgPath(id: UUID, postfix: String = "", fileExtension: String = ".jpg", interactive: Boolean): String {
 		val baseDir = if (interactive) imgDst else imgDst.resolve(nonInteractiveDir)
 		return idPath(baseDir, id.toString(), postfix, fileExtension)
 	}
