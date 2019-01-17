@@ -34,7 +34,7 @@ import org.droidmate.explorationModel.retention.StringCreator
 import java.util.*
 import kotlin.collections.HashMap
 
-open class Widget internal constructor(properties: UiElementPropertiesI,
+open class Widget constructor(properties: UiElementPropertiesI,
                                        val parentId: ConcreteId?): UiElementPropertiesI {
 
 	override val metaInfo: List<String> = properties.metaInfo
