@@ -4,6 +4,7 @@ package org.droidmate.explorationModel
 
 import org.droidmate.deviceInterface.exploration.Rectangle
 import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
+import java.io.Serializable
 import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -13,7 +14,7 @@ import kotlin.system.measureNanoTime
 /** custom type aliases and extension functions */
 typealias DeactivatableFlag = Boolean?
 
-data class ConcreteId(val uid: UUID, val configId: UUID) {
+data class ConcreteId(val uid: UUID, val configId: UUID): Serializable {
 	override fun toString(): String = "${uid}_$configId"
 
 	companion object {

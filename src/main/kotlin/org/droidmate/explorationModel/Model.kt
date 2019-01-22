@@ -45,7 +45,7 @@ import kotlin.system.measureTimeMillis
  * any direct call of launch/async is in this scope and will be waited for at the end of this lifecycle (end of exploration)
  * meanwhile we use currentScope or coroutineScope/supervisorScope to directly wait for child jobs before returning from a function call
  */
-open class Model private constructor(val config: ModelConfig): CoroutineScope {
+open class Model protected constructor(val config: ModelConfig): CoroutineScope {
 
 	private val paths = LinkedList<ExplorationTrace>()
 	/** non-mutable view of all traces contained within this model */
@@ -142,6 +142,10 @@ open class Model private constructor(val config: ModelConfig): CoroutineScope {
 	internal open fun parseState(widgets: Collection<Widget>, isHomeScreen: Boolean): State =
 			State(widgets, isHomeScreen)
 
+	/** override this function if the Widget class was extended to create the custom object here */
+	protected open fun createWidget(properties: UiElementPropertiesI, parent: ConcreteId?): Widget =
+			Widget(properties, parent)
+
 	private fun generateWidgets(action: ActionResult, @Suppress("UNUSED_PARAMETER") trace: ExplorationTrace): Collection<Widget>{
 		val elements: Map<Int, UiElementPropertiesI> = action.guiSnapshot.widgets.associateBy { it.idHash }
 		return generateWidgets(elements)
@@ -150,7 +154,7 @@ open class Model private constructor(val config: ModelConfig): CoroutineScope {
 	/** used on model update to compute the list of UI elements contained in the current UI screen ([State]).
 	 *  used by ModelParser to create [Widget] object from persisted data
 	 */
-	internal open fun generateWidgets(elements: Map<Int, UiElementPropertiesI>): Collection<Widget>{
+	open fun generateWidgets(elements: Map<Int, UiElementPropertiesI>): Collection<Widget>{
 		val widgets = HashMap<Int,Widget>()
 		val workQueue = LinkedList<UiElementPropertiesI>().apply {
 			addAll(elements.values.filter { it.parentHash == 0 })  // add all roots to the work queue
@@ -159,7 +163,7 @@ open class Model private constructor(val config: ModelConfig): CoroutineScope {
 		while (workQueue.isNotEmpty()){
 			with(workQueue.pollFirst()){
 				val parent = if(parentHash != 0) widgets[parentHash]!!.id else null
-				widgets[idHash] = Widget(this, parent)
+				widgets[idHash] = createWidget(this, parent)
 				childHashes.forEach {
 //					check(elements[it]!=null){"ERROR no element with hashId $it in working queue"}
 					if(elements[it] == null)
