@@ -92,7 +92,7 @@ open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mu
 		if(actionRes.action is ActionQueue)
 			actionRes.action.actions.map {
 				Interaction(it, res = actionRes, prevStateId = oldState.stateId, resStateId = dstState.stateId,
-						target = if(actionRes.action.hasWidgetTarget) widgetTargets.pollFirst() else null)
+						target = if(it.hasWidgetTarget) widgetTargets.pollFirst() else null)
 			}.also {
 				add(Interaction(ActionQueue.startName, res = actionRes, prevStateId = oldState.stateId, resStateId = dstState.stateId))
 				addAll(it)
@@ -129,6 +129,7 @@ open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mu
 		size += 1
 		lastActionType = action.actionType
 		trace.send(Add(action))
+		interactionsC += 1
 		this.mostRecentState = RecentState(dstState, widgetTargets, EmptyAction, listOf(action))
 	}
 
@@ -137,9 +138,10 @@ open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mu
 	 * ASSUMPTION no watchers are to be notified
 	 */
 	internal suspend fun updateAll(actions: List<Interaction>, latestState: State){
-		size += actions.size
+		size += actions.filterNot { it.actionType.isQueueStart() || it.actionType.isQueueEnd() }.size
 		lastActionType = actions.last().actionType
 		trace.send(AddAll(actions))
+		interactionsC += actions.size
 		if(actions.last().actionType.isQueueEnd()){
 			val queueStart = actions.indexOfLast { it.actionType.isQueueStart() }
 			val interactions = actions.subList(queueStart,actions.size)
@@ -148,7 +150,10 @@ open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mu
 	}
 
 	val currentState get() = mostRecentState.state
+	/** WARNING this is the number of issued exploration actions.
+	 * Therefore, this value is < #Interactions ([interactionsC]) if any ActionQueues were used */
 	var size: Int = 0 // avoid timeout from trace access and just count how many actions were created
+	var interactionsC: Int = 0
 	var lastActionType: String = ""
 
 	@Deprecated("to be removed, instead have a list of all unexplored widgets and remove the ones chosen as target -> best done as ModelFeature")
@@ -160,7 +165,9 @@ open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mu
 
 	fun getExploredWidgets(): List<Widget> = targets
 
-	private fun P_addAll(actions:List<Interaction>) = trace.sendBlocking(AddAll(actions))  // this does never actually block the sending since the capacity is unlimited
+	private fun P_addAll(actions:List<Interaction>) = trace.sendBlocking(AddAll(actions)).also {
+		interactionsC += actions.size
+	}  // this does never actually block the sending since the capacity is unlimited
 
 	/** use this function only on the critical execution path otherwise use [P_getActions] instead */
 	fun getActions(): List<Interaction> 	//FIXME the runBlocking should be replaced with non-thread blocking coroutineScope

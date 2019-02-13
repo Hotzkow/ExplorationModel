@@ -35,6 +35,8 @@ import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.pa
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.statesSubDir
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.imagesSubDir
 import org.droidmate.explorationModel.config.ConfigProperties.Output.outputDir
+import org.droidmate.explorationModel.debugOutput
+import org.droidmate.explorationModel.measurePerformance
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -44,7 +46,8 @@ import java.util.*
 class ModelConfig private constructor(path: Path,
                                       val appName: String,
                                       private val config: Configuration,
-                                      isLoadC: Boolean = false) : Configuration by config {
+                                      @Suppress("MemberVisibilityCanBePrivate") // used by some model features to restore/load their state
+                                      val isLoadC: Boolean = false) : Configuration by config {
 	/** @path path-string locationg the base directory where all model data is supposed to be dumped */
 
 	constructor(path: Path, appName: String, isLoadC: Boolean = false): this(path.toAbsolutePath(), appName, resourceConfig, isLoadC)
@@ -60,6 +63,9 @@ class ModelConfig private constructor(path: Path,
 			Files.createDirectories((stateDst))
 			Files.createDirectories((imgDst))
 		}
+		// disable debug output if debugMode is disabled
+		debugOutput = config[ConfigProperties.Output.debugMode]
+		measurePerformance = config[ConfigProperties.Output.debugMode]
 	}
 
 	private val idPath: (Path, String, String, String) -> String = { baseDir, id, postfix, fileExtension -> baseDir.toString() + "${File.separator}$id$postfix$fileExtension" }

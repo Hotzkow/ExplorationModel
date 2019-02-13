@@ -52,6 +52,10 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 
 	/**------------------------------- open function default implementations ------------------------------------------**/
 
+	/** Elements we can interact with, however (some of) these may be currently out of screen,
+	 * such that we need to navigate (scroll) to them firs.
+	 * To know if we can directly interact with any widget right now check its property `canInteractWith`.
+	 */
 	open val actionableWidgets by lazy { widgets.filter { it.isInteractive } }
 	open val visibleTargets by lazy { actionableWidgets.filter { it.canInteractWith	}}
 

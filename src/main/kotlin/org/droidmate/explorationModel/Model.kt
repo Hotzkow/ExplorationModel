@@ -47,7 +47,7 @@ import kotlin.system.measureTimeMillis
  */
 open class Model protected constructor(val config: ModelConfig): CoroutineScope {
 
-	private val paths = LinkedList<ExplorationTrace>()
+	protected val paths = LinkedList<ExplorationTrace>()
 	/** non-mutable view of all traces contained within this model */
 	fun getPaths(): List<ExplorationTrace> = paths
 
@@ -60,7 +60,7 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 
 	// we use supervisorScope for the dumping, such that cancellation and exceptions are only propagated downwards
 	// meaning if a dump process fails the overall model process is not affected
-	open suspend fun dumpModel(config: ModelConfig): Job = this.launch(CoroutineName("Model-dump")+backgroundJob){
+	open fun dumpModel(config: ModelConfig): Job = this.launch(CoroutineName("Model-dump")+backgroundJob){
 		getStates().let { states ->
 			debugOut("dump Model with ${states.size}")
 			states.forEach { s -> launch(CoroutineName("state-dump ${s.uid}")) { s.dump(config) } }
@@ -70,15 +70,15 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 
 	private var uTime: Long = 0
 	/** update the model with any [action] executed as part of an execution [trace] **/
-	suspend fun updateModel(action: ActionResult, trace: ExplorationTrace) {
+	fun updateModel(action: ActionResult, trace: ExplorationTrace) {
 		measureTimeMillis {
 			storeScreenShot(action)
-			val widgets = generateWidgets(action, trace).also{ addWidgets(it) }
-			val newState = generateState(action, widgets).also{ addState(it) }
+			val widgets = generateWidgets(action, trace).also{ launch{ addWidgets(it) } }
+			val newState = generateState(action, widgets).also{ launch{ addState(it) } }
 			trace.update(action, newState)
 
 			if (config[ConfigProperties.ModelProperties.dump.onEachAction]) {
-				this.launch(CoroutineName("state-dump")) { newState.dump(config) }  //TODO the launch may be on state/trace object instead
+				this.launch(CoroutineName("state-dump")) { newState.dump(config) }   //TODO the launch may be on state/trace object instead
 				this.launch(CoroutineName("trace-dump")) { trace.dump(config) }
 			}
 		}.let {
@@ -179,8 +179,8 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 	/**---------------------------------------- private methods -------------------------------------------------------**/
 	private fun storeScreenShot(action: ActionResult) = this.launch(CoroutineName("screenShot-dump")+backgroundJob){
 		if(action.screenshot.isNotEmpty())
-			Files.write(config.imgDst.resolve("${action.action.id}.jpg"), action.screenshot
-					, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+			withContext(Dispatchers.IO){ Files.write(config.imgDst.resolve("${action.action.id}.jpg"), action.screenshot
+					, StandardOpenOption.CREATE, StandardOpenOption.WRITE) }
 	}
 
 	companion object {

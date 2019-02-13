@@ -3,8 +3,9 @@ package org.droidmate.explorationModel.config
 import com.natpryce.konfig.*
 
 object ConfigProperties {
-	internal object Output : PropertyGroup() {
+	object Output : PropertyGroup() {
 		val outputDir by uriType
+		val debugMode by booleanType
 	}
 
 	object ModelProperties : PropertyGroup() {
@@ -13,6 +14,7 @@ object ConfigProperties {
 			val statesSubDir by uriType
 			val imagesSubDir by uriType
 			val cleanDirs by booleanType
+			val FeatureDir by uriType
 		}
 
 		object dump : PropertyGroup() {

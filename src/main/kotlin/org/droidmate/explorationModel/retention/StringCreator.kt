@@ -92,10 +92,10 @@ object StringCreator {
 				.map{ it.parseValue(values, indexMap) }.toMap()
 
 
-	internal fun parseWidgetPropertyString(values: List<String>, indexMap: Map<WidgetProperty,Int>): UiElementP
+	fun parseWidgetPropertyString(values: List<String>, indexMap: Map<WidgetProperty,Int>): UiElementPropertiesI
 	= UiElementP(	baseAnnotations.parsePropertyString(values,indexMap) )
 
-	internal fun parseActionPropertyString(values: List<String>, target: Widget?,
+	fun parseActionPropertyString(values: List<String>, target: Widget?,
 	                                       indexMap: Map<AnnotatedProperty<Interaction>, Int> = defaultActionMap): Interaction
 			= with(actionProperties.parsePropertyString(values,indexMap)){
 		Interaction( targetWidget = target,

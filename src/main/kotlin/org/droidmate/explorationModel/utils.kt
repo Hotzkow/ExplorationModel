@@ -49,8 +49,8 @@ internal fun timestamp(): String = DateTimeFormatter.ofPattern(datePattern).form
 
 /** debug functions */
 
-internal const val debugOutput = true
-const val measurePerformance = true
+var debugOutput = true
+var measurePerformance = true
 
 @Suppress("ConstantConditionIf")
 fun debugOut(msg:String, enabled: Boolean = true) { if (debugOutput && enabled) println(msg) }

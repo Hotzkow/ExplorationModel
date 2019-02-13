@@ -74,7 +74,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	open fun isLeaf(): Boolean = childHashes.isEmpty()
 
 	protected open fun computeInteractive(): Boolean =
-			enabled && ( isInputField || clickable || checked ?: false || longClickable || scrollable)
+			enabled && ( isInputField || clickable || checked != null || longClickable || scrollable)
 
 	/**
 	 * @see computeUId
@@ -144,7 +144,8 @@ open class Widget constructor(properties: UiElementPropertiesI,
 
 	private fun String.ifNotEmpty(label:String) = if(isNotBlank()) "$label=$this" else ""
 
-	private val simpleClassName by lazy { className.substring(className.lastIndexOf(".") + 1) }
+	@Suppress("MemberVisibilityCanBePrivate")
+	protected val simpleClassName by lazy { className.substring(className.lastIndexOf(".") + 1) }
 	override fun toString(): String {
 		return "interactive=$isInteractive-${uid}_$configId: $simpleClassName" +
 				"[${text.ifNotEmpty("text")} ${hintText.ifNotEmpty("hint")} ${contentDesc.ifNotEmpty("description")} " +

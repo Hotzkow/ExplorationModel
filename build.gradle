@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-	api 'com.github.hotzkow:platformInterfaceLib:master-SNAPSHOT'
+	compile 'com.github.hotzkow:platformInterfaceLib:master-SNAPSHOT' // in theory it should be 'api', but for some reason that does not work for transitive classpath dependencies
 	implementation 'com.natpryce:konfig:1.6.6.0'  // configuration library
 	implementation 'org.slf4j:slf4j-api:1.7.25'
 
