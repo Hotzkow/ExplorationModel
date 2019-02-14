@@ -23,7 +23,7 @@
 //
 // web: www.droidmate.org
 
-@file:Suppress("ReplaceSingleLineLet")
+@file:Suppress("ReplaceSingleLineLet", "EXPERIMENTAL_API_USAGE")
 
 package org.droidmate.explorationModel
 

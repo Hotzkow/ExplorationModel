@@ -1,3 +1,5 @@
+@file:Suppress("EXPERIMENTAL_API_USAGE")
+
 package org.droidmate.explorationModel.retention.loading
 
 import com.natpryce.konfig.CommandLineOption
@@ -30,18 +32,21 @@ import java.nio.file.Paths
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
-/** public interface, used to parse any model **/
+/** public interface, used to parse any model
+ * @modelProvider only required for extendedModel types to parse the correct type instance and use overwitten functions, use format (appName,modelCfg)->ExtendedModel
+ * **/
 object ModelParser{
 	@JvmOverloads suspend fun loadModel(config: ModelConfig, watcher: LinkedList<ModelFeatureI> = LinkedList(),
 	                                    autoFix: Boolean = false, sequential: Boolean = false, enablePrint: Boolean = false,
 	                                    contentReader: ContentReader = ContentReader(config), enableChecks: Boolean = true,
-	                                    customHeaderMap: Map<String,String> = emptyMap())
+	                                    customHeaderMap: Map<String,String> = emptyMap(),
+	                                    modelProvider: (ModelConfig)->Model = {Model.emptyModel(config)})
 			: Model{
 		if(sequential) return debugT("model loading (sequential)", {
-			ModelParserS(config, compatibilityMode = autoFix, enablePrint = enablePrint, reader = contentReader, enableChecks = enableChecks).loadModel(watcher, customHeaderMap)
+			ModelParserS(config, compatibilityMode = autoFix, enablePrint = enablePrint, reader = contentReader, enableChecks = enableChecks, modelProvider = modelProvider).loadModel(watcher, customHeaderMap)
 		}, inMillis = true)
 		return debugT("model loading (parallel)", {
-			ModelParserP(config, compatibilityMode = autoFix, enablePrint = enablePrint, reader = contentReader, enableChecks = enableChecks).loadModel(watcher, customHeaderMap)
+			ModelParserP(config, compatibilityMode = autoFix, enablePrint = enablePrint, reader = contentReader, enableChecks = enableChecks, modelProvider = modelProvider).loadModel(watcher, customHeaderMap)
 		}, inMillis = true)
 	}
 }
@@ -58,7 +63,8 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 
 	override val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-	override val model by lazy{ Model.emptyModel(config) }
+	abstract val modelProvider: (ModelConfig)->Model
+	override val model by lazy{ modelProvider(config) }
 	protected val actionParseJobName: (List<String>)->String = { actionS ->
 		"actionParser ${actionS[Interaction.srcStateIdx]}->${actionS[Interaction.resStateIdx]}"}
 
@@ -84,17 +90,18 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 	abstract suspend fun addEmptyState()
 
 	protected open suspend fun traceProducer() = coroutineScope {
-		produce<Path>(context = CoroutineName("trace Producer"), capacity = 5) {
+		produce<Path>(context = Dispatchers.IO+CoroutineName("trace Producer"), capacity = 5) {
 		logger.trace("PRODUCER CALL")
-		Files.list(Paths.get(config.baseDir.toUri())).use { s ->
-			s.filter { it.fileName.toString().startsWith(config[ConfigProperties.ModelProperties.dump.traceFilePrefix]) }
-					.also {
-						for (p in it) {
-							send(p)
+			@Suppress("BlockingMethodInNonBlockingContext") // should be handled by Dispatchers.IO but the highlighting is incorrect when using + context
+			Files.list(Paths.get(config.baseDir.toUri())).use { s ->
+				s.filter { it.fileName.toString().startsWith(config[ConfigProperties.ModelProperties.dump.traceFilePrefix]) }
+						.also {
+							for (p in it) {
+								send(p)
+							}
 						}
-					}
-		}
-	}}
+			}
+		}}
 
 	private val modelMutex = Mutex()
 
@@ -130,7 +137,7 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 	}
 
 	/** parse a single action this function is called in the processor either asynchronous (Deferred) or sequential (blocking) */
-	suspend fun parseAction(actionS: List<String>, scope: CoroutineScope): Pair<Interaction, State> {
+	suspend fun parseAction(actionS: List<String>): Pair<Interaction, State> {
 		if(enablePrint) println("\n\t ---> parse action $actionS")
 		val resId = ConcreteId.fromString(actionS[Interaction.resStateIdx])!!
 		val resState = stateParser.queue.computeIfAbsent(resId, stateParser.parseIfAbsent(coroutineContext)).getState()
@@ -260,15 +267,16 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 
 internal open class ModelParserP(override val config: ModelConfig, override val reader: ContentReader = ContentReader(config),
                                  override val compatibilityMode: Boolean = false, override val enablePrint: Boolean = false,
-                                 override val enableChecks: Boolean = true)
+                                 override val enableChecks: Boolean = true,
+                                 override val modelProvider: (ModelConfig) -> Model = {Model.emptyModel(config)})
 	: ModelParserI<Deferred<Pair<Interaction, State>>, Deferred<State>, Deferred<UiElementPropertiesI>>() {
 	override val isSequential: Boolean = false
 
 	override val widgetParser by lazy { WidgetParserP(model, compatibilityMode, enableChecks) }
 	override val stateParser  by lazy { StateParserP(widgetParser, reader, model, compatibilityMode, enableChecks) }
 
-	override val processor: suspend (s: List<String>, CoroutineScope) -> Deferred<Pair<Interaction, State>> = { actionS, scope ->
-		CoroutineScope(coroutineContext+Job()).async(CoroutineName(actionParseJobName(actionS))) { parseAction(actionS, scope) }
+	override val processor: suspend (s: List<String>, CoroutineScope) -> Deferred<Pair<Interaction, State>> = { actionS, _ ->
+		CoroutineScope(coroutineContext+Job()).async(CoroutineName(actionParseJobName(actionS))) { parseAction(actionS) }
 	}
 
 	override suspend fun addEmptyState() {
@@ -281,15 +289,16 @@ internal open class ModelParserP(override val config: ModelConfig, override val 
 
 private class ModelParserS(override val config: ModelConfig, override val reader: ContentReader = ContentReader(config),
                            override val compatibilityMode: Boolean = false, override val enablePrint: Boolean = false,
-                           override val enableChecks: Boolean = true)
+                           override val enableChecks: Boolean = true,
+                           override val modelProvider: (ModelConfig) -> Model = {Model.emptyModel(config)})
 	: ModelParserI<Pair<Interaction, State>, State, UiElementPropertiesI>() {
 	override val isSequential: Boolean = true
 
 	override val widgetParser by lazy { WidgetParserS(model, compatibilityMode, enableChecks) }
 	override val stateParser  by lazy { StateParserS(widgetParser, reader, model, compatibilityMode, enableChecks) }
 
-	override val processor: suspend (s: List<String>, CoroutineScope) -> Pair<Interaction, State> = { actionS:List<String>, scope ->
-		parseAction(actionS, scope)
+	override val processor: suspend (s: List<String>, CoroutineScope) -> Pair<Interaction, State> = { actionS:List<String>, _ ->
+		parseAction(actionS)
 	}
 
 	override suspend fun addEmptyState() {
