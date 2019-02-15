@@ -63,7 +63,7 @@ inline fun <T> nullableDebugT(msg: String, block: () -> T?, timer: (Long) -> Uni
 			res = block.invoke()
 		}.let {
 			timer(it)
-			println("time ${if (inMillis) "${it / 1000000.0} ms" else "${it / 1000.0} ns/1000"} \t $msg")
+			println("time ${if (inMillis) "%.2f".format(it / 1000000.0) +" ms" else "%.2f".format(it / 1000.0) + " ns/1000"} \t $msg")
 		}
 	} else res = block.invoke()
 	return res
