@@ -1,5 +1,6 @@
 package org.droidmate.explorationModel.retention.loading
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.droidmate.deviceInterface.exploration.ActionType
 import org.droidmate.deviceInterface.exploration.Click
@@ -30,6 +31,7 @@ fun Interaction.actionString(sep: String) = StringCreator.createActionString(thi
  *
  * REMARK for mockito to work it is essential that all mocked/spied classes and methods have the `open` modifier
  */
+@ExperimentalCoroutinesApi
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(JUnit4::class)
 class ModelLoadTester: TestI, TestModel by DefaultTestModel(), ModelLoaderTI by ModelLoaderT(config) {

@@ -20,7 +20,8 @@ typealias TestAction = Interaction
                                    nextState: ConcreteId = emptyId, actionType:String = "TEST_ACTION",
                                    data: String = ""): TestAction
 		= Interaction(actionType = actionType, target = targetWidget, startTimestamp = LocalDateTime.MIN, data = data,
-		endTimestamp = LocalDateTime.MIN, successful = true, exception = "test action", prevState = oldState, resState = nextState)
+		endTimestamp = LocalDateTime.MIN, successful = true, exception = "test action",
+		prevState = oldState, resState = nextState, actionId = -1)
 
 
 internal class DefaultTestModel: TestModel {

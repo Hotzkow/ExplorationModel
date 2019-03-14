@@ -12,6 +12,9 @@ typealias DeviceLog = TimeFormattedLogMessageI
 typealias DeviceLogs = List<DeviceLog>
 
 @Suppress("DataClassPrivateConstructor")
+/**
+ * @actionId used to map this interaction to the coresponding result screenshot, which is named according to this value
+ */
 open class Interaction (
 		@property:Persistent("Action", 1) val actionType: String,
 		@property:Persistent("Interacted Widget", 2, PType.ConcreteId) val targetWidget: Widget?,
@@ -21,6 +24,7 @@ open class Interaction (
 		@property:Persistent("Exception", 7) val exception: String,
 		@property:Persistent("Source State", 0, PType.ConcreteId) val prevState: ConcreteId,
 		@property:Persistent("Resulting State", 3, PType.ConcreteId) val resState: ConcreteId,
+		@property:Persistent("Action-Id", 9, PType.Int) val actionId: Int,
 		@property:Persistent("Data", 8) val data: String = "",
 		val deviceLogs: DeviceLogs = emptyList(),
 		@Suppress("unused") val meta: String = "") {
@@ -29,25 +33,25 @@ open class Interaction (
 			: this(actionType = res.action.name, targetWidget = target,
 			startTimestamp = res.startTimestamp, endTimestamp = res.endTimestamp, successful = res.successful,
 			exception = res.exception, prevState = prevStateId, resState = resStateId, data = computeData(res.action),
-			deviceLogs = res.deviceLogs,	meta = res.action.id.toString())
+			deviceLogs = res.deviceLogs,	meta = res.action.id.toString(), actionId = res.action.id)
 
 	/** used for ActionQueue entries */
 	constructor(action: ExplorationAction, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: Widget?)
 			: this(action.name, target, res.startTimestamp,
 			res.endTimestamp, successful = res.successful, exception = res.exception, prevState = prevStateId,
-			resState = resStateId, data = computeData(action), deviceLogs = res.deviceLogs)
+			resState = resStateId, data = computeData(action), deviceLogs = res.deviceLogs, actionId = action.id)
 
 	/** used for ActionQueue start/end Interaction */
 	internal constructor(actionName:String, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId)
 			: this(actionName, null, res.startTimestamp,
 			res.endTimestamp, successful = res.successful, exception = res.exception, prevState = prevStateId,
-			resState = resStateId, deviceLogs = res.deviceLogs)
+			resState = resStateId, deviceLogs = res.deviceLogs, actionId = res.action.id)
 
 	/** used for parsing from string */
 	constructor(actionType: String, target: Widget?, startTimestamp: LocalDateTime, endTimestamp: LocalDateTime,
-	            successful: Boolean, exception: String, resState: ConcreteId, prevState: ConcreteId, data: String = "")
+	            successful: Boolean, exception: String, resState: ConcreteId, prevState: ConcreteId, data: String = "", actionId: Int)
 			: this(actionType = actionType, targetWidget = target, startTimestamp = startTimestamp, endTimestamp = endTimestamp,
-			successful = successful, exception = exception, prevState = prevState, resState = resState, data = data)
+			successful = successful, exception = exception, prevState = prevState, resState = resState, data = data, actionId = actionId)
 
 
 	/**
@@ -55,22 +59,6 @@ open class Interaction (
 	 * (used to measure overhead for new exploration strategies)
 	 */
 	val decisionTime: Long by lazy { ChronoUnit.MILLIS.between(startTimestamp, endTimestamp) }
-
-	@JvmOverloads
-	@Deprecated("to be removed", ReplaceWith("StringCreator.createActionString(a: Interaction, sep: String)"))
-	fun actionString(chosenFields: Array<ActionDataFields> = ActionDataFields.values(), sep: String = ";"): String = chosenFields.joinToString(separator = sep) {
-		when (it) {
-			ActionDataFields.Action -> actionType
-			ActionDataFields.StartTime -> startTimestamp.toString()
-			ActionDataFields.EndTime -> endTimestamp.toString()
-			ActionDataFields.Exception -> exception
-			ActionDataFields.SuccessFul -> successful.toString()
-			ActionDataFields.PrevId -> prevState.toString()
-			ActionDataFields.DstId -> resState.toString()
-			ActionDataFields.WId -> targetWidget?.id.toString()
-			ActionDataFields.Data -> data
-		}
-	}
 
 	companion object {
 
@@ -90,17 +78,9 @@ open class Interaction (
 		@JvmStatic
 		val empty: Interaction by lazy {
 			Interaction("EMPTY", null, LocalDateTime.MIN, LocalDateTime.MIN, true,
-					"root action", emptyId, prevState = emptyId)
+					"root action", emptyId, prevState = emptyId, actionId = -1)
 		}
 
-		@Deprecated("to be removed in next version")
-		enum class ActionDataFields(var header: String = "") { PrevId("Source State"), Action, WId("Interacted Widget"),
-			DstId("Resulting State"), StartTime, EndTime, SuccessFul, Exception, Data;
-
-			init {
-				if (header == "") header = name
-			}
-		}
 	}
 
 	override fun toString(): String {
@@ -111,5 +91,5 @@ open class Interaction (
 	fun copy(prevState: ConcreteId, resState: ConcreteId): Interaction
 		= Interaction(actionType = actionType, targetWidget = targetWidget, startTimestamp = startTimestamp,
 			endTimestamp = endTimestamp, successful = successful, exception = exception,
-			prevState = prevState, resState = resState, data = data, deviceLogs = deviceLogs, meta = meta)
+			prevState = prevState, resState = resState, data = data, deviceLogs = deviceLogs, meta = meta, actionId = actionId)
 }

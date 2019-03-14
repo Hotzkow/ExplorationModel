@@ -52,6 +52,7 @@ data class AnnotatedProperty<R>(val property: KProperty1<out R, *>, val annotati
 	}
 }
 
+@Suppress("MemberVisibilityCanBePrivate")
 object StringCreator {
 	internal fun createPropertyString(t: PType, pv: Any?):String =
 			when{
@@ -106,7 +107,8 @@ object StringCreator {
 				exception = get(Interaction::exception.name) as String,
 				prevState = get(Interaction::prevState.name) as ConcreteId,
 				resState = get(Interaction::resState.name) as ConcreteId,
-				data = get(Interaction::data.name) as String
+				data = get(Interaction::data.name) as String,
+				actionId = get(Interaction::actionId.name) as Int
 		)}
 
 	internal val baseAnnotations: Sequence<WidgetProperty> by lazy {

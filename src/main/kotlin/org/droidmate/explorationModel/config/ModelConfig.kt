@@ -41,7 +41,6 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 
 class ModelConfig private constructor(path: Path,
                                       val appName: String,
@@ -70,22 +69,15 @@ class ModelConfig private constructor(path: Path,
 
 	private val idPath: (Path, String, String, String) -> String = { baseDir, id, postfix, fileExtension -> baseDir.toString() + "${File.separator}$id$postfix$fileExtension" }
 
-	val widgetFile: (ConcreteId, Boolean) -> String = { id, isHomeScreen 	->
+	val stateFile: (ConcreteId, Boolean) -> String = { id, isHomeScreen 	->
 		statePath(id, postfix = (if(isHomeScreen) "_HS" else "") ) }
 	fun statePath(id: ConcreteId, postfix: String = "", fileExtension: String = config[stateFileExtension]): String {
 		return idPath(stateDst, id.toString(), postfix, fileExtension)
 	}
 
-	@Deprecated("to be removed")
-	fun widgetImgPath(id: UUID, postfix: String = "", fileExtension: String = ".jpg", interactive: Boolean): String {
-		val baseDir = if (interactive) imgDst else imgDst.resolve(nonInteractiveDir)
-		return idPath(baseDir, id.toString(), postfix, fileExtension)
-	}
-
 	val traceFile = { traceId: String -> "$baseDir${File.separator}${config[traceFilePrefix]}$traceId${config[traceFileExtension]}" }
 
 	companion object {
-		private const val nonInteractiveDir = "widgets-nonInteractive"
 
 		private val resourceConfig by lazy {
 			ConfigurationProperties.fromResource("runtime/defaultModelConfig.properties")

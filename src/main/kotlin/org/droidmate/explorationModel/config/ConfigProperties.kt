@@ -26,16 +26,5 @@ object ConfigProperties {
 			val traceFileExtension by stringType
 			val traceFilePrefix by stringType
 		}
-
-		object imgDump : PropertyGroup() {
-			val states by booleanType
-			val widgets by booleanType
-
-			object widget : PropertyGroup() {
-				val nonInteractable by booleanType
-				val interactable by booleanType
-				val onlyWhenNoText by booleanType
-			}
-		}
 	}
 }

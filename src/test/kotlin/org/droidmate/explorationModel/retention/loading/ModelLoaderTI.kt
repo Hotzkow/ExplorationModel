@@ -63,7 +63,7 @@ class TestReader(config: ModelConfig): ContentReader(config){
 		if(s == null)
 			println("debug error")
 		return s!!.let{
-			Pair(Paths.get(config.widgetFile(stateId,it.isHomeScreen)),it.isHomeScreen)
+			Pair(Paths.get(config.stateFile(stateId,it.isHomeScreen)),it.isHomeScreen)
 		}
 	}
 

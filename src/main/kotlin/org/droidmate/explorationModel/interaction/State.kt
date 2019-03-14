@@ -105,7 +105,7 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 	 * [uid] => stateId_[HS,{}] as file name (HS is only present if isHomeScreen is true)
 	 */
 	open fun dump(config: ModelConfig) {
-		File( config.widgetFile(stateId,isHomeScreen) ).bufferedWriter().use { all ->
+		File( config.stateFile(stateId,isHomeScreen) ).bufferedWriter().use { all ->
 			all.write(StringCreator.widgetHeader(config[sep]))
 
 			widgets.forEach {
