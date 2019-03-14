@@ -14,6 +14,7 @@ typealias DeviceLogs = List<DeviceLog>
 @Suppress("DataClassPrivateConstructor")
 /**
  * @actionId used to map this interaction to the coresponding result screenshot, which is named according to this value
+ * @meta do not rely on this parameter as it may be removed or the content changed at any time, it is intended for debugging purposes only
  */
 open class Interaction (
 		@property:Persistent("Action", 1) val actionType: String,
@@ -88,6 +89,7 @@ open class Interaction (
 		return "$actionType: widget[${targetWidget?.let { it.toString() }}]:\n$prevState->$resState"
 	}
 
+	@Suppress("unused")
 	fun copy(prevState: ConcreteId, resState: ConcreteId): Interaction
 		= Interaction(actionType = actionType, targetWidget = targetWidget, startTimestamp = startTimestamp,
 			endTimestamp = endTimestamp, successful = successful, exception = exception,
