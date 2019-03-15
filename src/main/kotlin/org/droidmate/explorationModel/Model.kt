@@ -73,7 +73,7 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 	fun updateModel(action: ActionResult, trace: ExplorationTrace) {
 		measureTimeMillis {
 			storeScreenShot(action)
-			val widgets = generateWidgets(action, trace).also{ launch{ addWidgets(it) } }
+			val widgets = generateWidgets(action, trace).also{ incWidgetCounter(it.size) }
 			val newState = generateState(action, widgets).also{ launch{ addState(it) } }
 			trace.update(action, newState)
 
@@ -117,19 +117,11 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 		return states.find { it.stateId == id }
 	}
 
-	private val widgets = CollectionActor(HashSet<Widget>(), "WidgetActor").create()
-
-	suspend fun getWidgets(): Set<Widget>{  //TODO instead we could have the list of seen interactive widgets here (potentially with the count of interactions)
-		return CompletableDeferred<Collection<Widget>>().let{ response ->
-			widgets.send(GetAll(response))
-			response.await() as Set
-		}
-	}
+	suspend fun getWidgets(): Collection<Widget> = getStates().flatMap { it.widgets }
 
 	/** adding a value to the actor is non blocking and should not take much time */
-	internal suspend fun addWidgets(w: Collection<Widget>) {
-		nWidgets += w.size
-		widgets.send(AddAll(w))
+	internal fun incWidgetCounter(num: Int) {
+		nWidgets += num
 	}
 
 	/** -------------------------------------- protected generator methods --------------------------------------------**/

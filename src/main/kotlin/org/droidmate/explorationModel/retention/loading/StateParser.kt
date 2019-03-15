@@ -76,7 +76,7 @@ internal abstract class StateParserI<T,W>: ParserI<T, State>{
 				}
 			}}
 		}
-		model.addWidgets(widgets)
+		model.incWidgetCounter(widgets.size)
 
 		return if (widgets.isNotEmpty()) {
 			model.parseState(widgets, isHomeScreen).also { newState ->
