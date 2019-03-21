@@ -58,10 +58,10 @@ class ActionResult(val action: ExplorationAction,
 	}
 
 	/**
-	 * Identifies if the action was successful or crashed
+	 * Identifies if the action was successful, couldn't be performed or crashed
 	 */
 	val successful: Boolean
-		get() = exception == "N/A (no device exception available)"  //fixme this should probably be a const in common lib
+		get() = guiSnapshot.isSuccessful && exception.isBlank()
 
 }
 val EmptyActionResult = ActionResult(EmptyAction, LocalDateTime.MIN, LocalDateTime.MIN)

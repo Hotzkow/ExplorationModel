@@ -223,6 +223,10 @@ open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mu
 	}
 
 	companion object {
+		/** for each [ExplorationAction] this list contains the widgets affected by the action,
+		 * i.e. you should ensure that this list is kept up-to-date for each click,tick,text-input and long-click action
+		 * otherwise it will not be properly persistated in the model and may not be re-playable
+		 */
 		val widgetTargets = LinkedList<Widget>()
 	}
 
