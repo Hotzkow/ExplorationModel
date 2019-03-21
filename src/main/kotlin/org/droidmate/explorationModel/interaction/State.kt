@@ -46,7 +46,9 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 	val uid: UUID by lazy { lazyIds.value.uid }
 	val configId: UUID by lazy { lazyIds.value.configId }
 
+	@Suppress("unused")  // used on the exploration layer for strategy decisions
 	val hasActionableWidgets by lazy{ actionableWidgets.isNotEmpty() }
+	@Suppress("unused")  // used on the exploration layer for strategy decisions
 	val hasEdit: Boolean by lazy { widgets.any { it.isInputField } }
 	val widgets by lazy { _widgets.sortedBy { it.id.toString() } 	}
 
@@ -80,23 +82,25 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 			)
 
 
-	@Suppress("SpellCheckingInspection")
+	@Suppress("SpellCheckingInspection", "unused")  // used on the exploration layer for strategy decisions
 	open val isAppHasStoppedDialogBox: Boolean by lazy {
 		widgets.any { it.resourceId == "android:id/aerr_close" } &&
 				widgets.any { it.resourceId == "android:id/aerr_wait" }
 	}
 
+	@Suppress("unused")  // used on the exploration layer for strategy decisions
 	open val isRequestRuntimePermissionDialogBox: Boolean	by lazy {
 		widgets.any { // identify if we have a permission request
-			it.resourceId == resIdRuntimePermissionDialog  || // maybe it is safer to check for packageName 'com.google.android.packageinstaller' only?
+			it.isVisible && 		// permission request are always visible on the current screen
+					(it.resourceId == resIdRuntimePermissionDialog  || // maybe it is safer to check for packageName 'com.google.android.packageinstaller' only?
 					// handle cases for apps who 'customize' this request and use own resourceIds e.g. Home-Depot
 					when(it.text.toUpperCase()) {
 						"ALLOW", "DENY", "DON'T ALLOW" -> true
 						else -> false
-					}
+					})
 		}
 				// check that we have a ok or allow button
-				&& widgets.any{it.text.toUpperCase().let{ wText -> wText == "ALLOW" || wText == "OK" } }
+				&& widgets.any{it.isVisible && it.text.toUpperCase().let{ wText -> wText == "ALLOW" || wText == "OK" } }
 	}
 
 
