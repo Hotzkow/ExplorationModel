@@ -46,6 +46,9 @@ val emptyId = ConcreteId(emptyUUID, emptyUUID)
 private const val datePattern = "ddMM-HHmmss"
 internal fun timestamp(): String = DateTimeFormatter.ofPattern(datePattern).format(LocalDateTime.now())
 
+/** for performance measurement or computation printouts we often are only interested in the first two digits */
+fun Double.twoDigitString() = String.format("%.2f", this)
+fun Double.oneDigitString() = String.format("%.1f", this)
 
 /** debug functions */
 
@@ -63,7 +66,7 @@ inline fun <T> nullableDebugT(msg: String, block: () -> T?, timer: (Long) -> Uni
 			res = block.invoke()
 		}.let {
 			timer(it)
-			println("time ${if (inMillis) "%.2f".format(it / 1000000.0) +" ms" else "%.2f".format(it / 1000.0) + " ns/1000"} \t $msg")
+			println("time ${if (inMillis)(it / 1000000.0).twoDigitString() +" ms" else (it / 1000.0).twoDigitString() + " ns/1000"} \t $msg")
 		}
 	} else res = block.invoke()
 	return res
