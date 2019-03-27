@@ -92,7 +92,7 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 	open val isRequestRuntimePermissionDialogBox: Boolean	by lazy {
 		widgets.any { // identify if we have a permission request
 			it.isVisible && 		// permission request are always visible on the current screen
-					(it.resourceId == resIdRuntimePermissionDialog  || // maybe it is safer to check for packageName 'com.google.android.packageinstaller' only?
+					(it.resourceId.startsWith(resIdRuntimePermissionDialog)  ||
 					// handle cases for apps who 'customize' this request and use own resourceIds e.g. Home-Depot
 					when(it.text.toUpperCase()) {
 						"ALLOW", "DENY", "DON'T ALLOW" -> true
@@ -123,7 +123,7 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 	internal fun widgetsDump(sep: String) = widgets.map{ StringCreator.createPropertyString(it, sep) }
 
 	companion object {
-		private const val resIdRuntimePermissionDialog = "com.android.packageinstaller:id/dialog_container"
+		private const val resIdRuntimePermissionDialog = "com.android.packageinstaller:id/"
 
 		/** dummy element if a state has to be given but no widget data is available */
 		@JvmStatic
@@ -131,7 +131,7 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 	}
 	/** this function is used to add any widget.uid if it fulfills specific criteria
 	 * (i.e. it can be acted upon, has text nlpText or it is a leaf) */
-	private fun addRelevantId(id: UUID, w: Widget): UUID = if (isRelevantForId(w)){ id + w.uid } else id
+	protected fun addRelevantId(id: UUID, w: Widget): UUID = if (isRelevantForId(w)){ id + w.uid } else id
 
 	override fun equals(other: Any?): Boolean {
 		return when (other) {
