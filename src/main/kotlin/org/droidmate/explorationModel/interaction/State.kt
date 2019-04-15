@@ -50,7 +50,7 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 	val hasActionableWidgets by lazy{ actionableWidgets.isNotEmpty() }
 	@Suppress("unused")  // used on the exploration layer for strategy decisions
 	val hasEdit: Boolean by lazy { widgets.any { it.isInputField } }
-	val widgets by lazy { _widgets.sortedBy { it.id.toString() } 	}
+	open val widgets by lazy { _widgets.sortedBy { it.id.toString() } 	}
 
 	/**------------------------------- open function default implementations ------------------------------------------**/
 
