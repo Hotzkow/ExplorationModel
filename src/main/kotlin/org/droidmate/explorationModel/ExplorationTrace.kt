@@ -43,7 +43,7 @@ import kotlin.collections.HashSet
 import kotlin.properties.Delegates
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mutableListOf(), private val config: ModelConfig, val id: UUID) {
+open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mutableListOf(), private val config: ModelConfig, val id: UUID, val emptyState: State) {
 	protected val dumpMutex = Mutex() // for synchronization of (trace-)file access
 	init{ 	widgetTargets.clear() // ensure that this list is cleared even if we had an exception on previous apk exploration
 	}
@@ -57,7 +57,7 @@ open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mu
 	data class RecentState(val state: State, val interactionTargets: List<Widget>, val action: ExplorationAction, val interactions: List<Interaction>)
 	/** this property is set in the end of the trace update and notifies all watchers for changes */
 	protected var mostRecentState: RecentState
-			by Delegates.observable(RecentState(State.emptyState, emptyList(), EmptyAction, emptyList())) { _, last, recent ->
+			by Delegates.observable(RecentState(emptyState, emptyList(), EmptyAction, emptyList())) { _, last, recent ->
 				notifyObserver(old = last.state, new = recent.state, targets = recent.interactionTargets,
 						explorationAction = recent.action, interactions = recent.interactions)
 				internalUpdate(srcState = last.state, interactedTargets = recent.interactionTargets, interactions = recent.interactions)

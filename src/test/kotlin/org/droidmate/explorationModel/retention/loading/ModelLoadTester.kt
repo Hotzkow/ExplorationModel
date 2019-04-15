@@ -22,6 +22,7 @@ private val config = ModelConfig("JUnit", true)
 
 fun Widget.dataString(sep: String) = StringCreator.createPropertyString(this,sep)
 fun Interaction.actionString(sep: String) = StringCreator.createActionString(this,sep)
+internal val emptyState = State(emptyList())
 
 /** verify the ModelLoader correctly initializes/loads a model by using
  * - mocked model (mock the dump-file nlpText read)
@@ -36,7 +37,7 @@ fun Interaction.actionString(sep: String) = StringCreator.createActionString(thi
 @RunWith(JUnit4::class)
 class ModelLoadTester: TestI, TestModel by DefaultTestModel(), ModelLoaderTI by ModelLoaderT(config) {
 	private val testState = State(setOf(testWidget), isHomeScreen = false)
-	private val states = listOf(testState, State.emptyState)
+	private val states = listOf(testState, emptyState)
 
 	@Test
 	fun widgetParsingTest() = runBlocking{

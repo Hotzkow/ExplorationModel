@@ -36,7 +36,10 @@ import java.util.*
 
 /**
  * States have two components, the Id determined by its Widgets image, text and description and the ConfigId defined by the WidgetsProperties.
- ** be aware that the list of widgets is not guaranteed to be sorted in any specific order*/
+ ** be aware that the list of widgets is not guaranteed to be sorted in any specific order
+ * You should avoid creating instances of State directly and instead use the model to generate states
+ * in order to avoid incompatibilities with extension classes of State.
+ * */
 open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = false) {
 
 	val stateId by lazy {
@@ -125,9 +128,11 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 	companion object {
 		private const val resIdRuntimePermissionDialog = "com.android.packageinstaller:id/"
 
+
 		/** dummy element if a state has to be given but no widget data is available */
-		@JvmStatic
-		val emptyState: State by lazy { State( emptyList() ) }
+//		@JvmStatic
+//		internal val emptyState: State by lazy { State( emptyList() ) }
+
 	}
 	/** this function is used to add any widget.uid if it fulfills specific criteria
 	 * (i.e. it can be acted upon, has text nlpText or it is a leaf) */

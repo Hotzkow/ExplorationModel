@@ -280,7 +280,7 @@ internal open class ModelParserP(override val config: ModelConfig, override val 
 	}
 
 	override suspend fun addEmptyState() {
-		State.emptyState.let{ stateParser.queue[it.stateId] =  CoroutineScope(coroutineContext).async(CoroutineName("empty State")) { it } }
+		model.emptyState.let{ stateParser.queue[it.stateId] =  CoroutineScope(coroutineContext).async(CoroutineName("empty State")) { it } }
 	}
 
 	override suspend fun getElem(e: Deferred<Pair<Interaction, State>>): Pair<Interaction, State> = e.await()
@@ -302,7 +302,7 @@ private class ModelParserS(override val config: ModelConfig, override val reader
 	}
 
 	override suspend fun addEmptyState() {
-		State.emptyState.let{ stateParser.queue[it.stateId] = it }
+		model.emptyState.let{ stateParser.queue[it.stateId] = it }
 	}
 
 	override suspend fun getElem(e: Pair<Interaction, State>): Pair<Interaction, State> = e

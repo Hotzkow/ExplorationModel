@@ -52,8 +52,11 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 	fun getPaths(): List<ExplorationTrace> = paths
 
 /**---------------------------------- public interface --------------------------------------------------------------**/
+	/** dummy element if a state has to be given but no widget data is available */
+	open val emptyState: State by lazy { State( emptyList() ) }
+
 	open fun initNewTrace(watcher: LinkedList<ModelFeatureI>,id: UUID = UUID.randomUUID()): ExplorationTrace {
-	return ExplorationTrace(watcher, config, id).also { actionTrace ->
+	return ExplorationTrace(watcher, config, id, emptyState).also { actionTrace ->
 			paths.add(actionTrace)
 		}
 	}
@@ -131,7 +134,7 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 			with(action.guiSnapshot) { State(widgets, isHomeScreen) }
 
 	/** used by ModelParser to create [State] object from persisted data */
-	internal open fun parseState(widgets: Collection<Widget>, isHomeScreen: Boolean): State =
+	open fun parseState(widgets: Collection<Widget>, isHomeScreen: Boolean): State =
 			State(widgets, isHomeScreen)
 
 	/** override this function if the Widget class was extended to create the custom object here */
@@ -177,8 +180,10 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 
 	companion object {
         val logger: Logger by lazy { LoggerFactory.getLogger(this::class.java) }
+
+		/** only use as default value shortcut but never fixed to create a Model, since that would break extendability */
 		@JvmStatic
-		fun emptyModel(config: ModelConfig): Model = Model(config).apply { runBlocking { addState(State.emptyState) }}
+		fun emptyModel(config: ModelConfig): Model = Model(config).apply { runBlocking { addState(emptyState) }}
 
 		/**
 		 * use this method to load a specific app model from its dumped data

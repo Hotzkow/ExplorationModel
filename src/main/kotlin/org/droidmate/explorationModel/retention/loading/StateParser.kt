@@ -88,7 +88,7 @@ internal abstract class StateParserI<T,W>: ParserI<T, State>{
 				}
 				model.addState(newState)
 			}
-		} else State.emptyState
+		} else model.emptyState
 	}
 
 	fun fixedStateId(idString: String) = ConcreteId.fromString(idString).let{	idMapping[it] ?: it }
