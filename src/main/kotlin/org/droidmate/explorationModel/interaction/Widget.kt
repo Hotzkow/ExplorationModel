@@ -100,9 +100,11 @@ open class Widget constructor(properties: UiElementPropertiesI,
 			else uidString.toUUID()
 	}
 	// used if we have no NLP text available
-	private val uidString by lazy{ listOf(className, packageName, isPassword, isKeyboard, idHash).joinToString(separator = "<;>") }
+	private val uidString by lazy{ listOf(className, packageName, isPassword, isKeyboard, xpath).joinToString(separator = "<;>") }
 
 	/** compute the configuration of this Widget by a subset of its properties.
+	 * For correct behavior this function should always include [idHash] and [childHashes] into the computed configuration-id.
+	 * Otherwise elements may get 'lost' in the extracted state since uniqueness wouldn't be guaranteed anymore.
 	 */
 	protected open fun computePropertyId(): UUID {
 		val relevantProperties = listOf(enabled, definedAsVisible, visibleBounds, text, checked, focused, selected, clickable, longClickable,
