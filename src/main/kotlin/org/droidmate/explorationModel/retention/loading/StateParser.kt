@@ -39,7 +39,7 @@ internal abstract class StateParserI<T,W>: ParserI<T, State>{
 	 * to transform the model to the current (newer) id computation.
 	 * This mapping is supposed to be used to adapt the action targets in the trace parser (Interaction entries)
 	 */
-	private val idMapping: ConcurrentHashMap<ConcreteId, ConcreteId> = ConcurrentHashMap()
+	internal val idMapping: ConcurrentHashMap<ConcreteId, ConcreteId> = ConcurrentHashMap()
 //	override fun logcat(msg: String) {	}
 
 	/** parse the state either asynchronous (Deferred) or sequential (blocking) */
@@ -69,13 +69,18 @@ internal abstract class StateParserI<T,W>: ParserI<T, State>{
 			}
 		}
 		debugOut("${uiProperties.map { it.first.toString()+": HashId = ${it.second.idHash}" }}",false)
-		val widgets = model.generateWidgets(uiProperties.associate { (_,e) ->  e.idHash to e }).also {
-			it.forEach { w -> uiProperties.find { p -> p.second.idHash == w.idHash }!!.let{ (id,_) ->
+		val widgets = model.generateWidgets(uiProperties.associate { (_,e) ->  e.idHash to e })
+		if(enableChecks) widgets.forEach { w ->
+			uiProperties.find { (_,properties) -> properties.idHash == w.idHash }!!.let{ (id,_) ->
 				verify("ERROR on widget parsing inconsistent ID created ${w.id} instead of $id",{id == w.id}) {
-					idMapping[id] = w.id
+					val curVal = widgetParser.idMapping[id]
+					if(curVal != null && curVal != w.id) logger.error("Widget-id collision for source id $id")
+					widgetParser.idMapping[id] = w.id
 				}
-			}}
+			}
 		}
+		if(enableChecks && uiProperties.any{ (id,_) -> idMapping.keys.none { it==id } && widgets.none { it.id == id }})
+			logger.error("incomplete widget-id mapping")
 		model.incWidgetCounter(widgets.size)
 
 		return if (widgets.isNotEmpty()) {

@@ -69,7 +69,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 
 	/**------------------------------- open function default implementations ------------------------------------------**/
 
-	open val nlpText: String by lazy { "$hintText $text $contentDesc".replace("\\s+", " ").splitOnCaseSwitch().trim() }
+	open val nlpText: String by lazy { "$hintText $text $contentDesc".replace("<newline>"," ").replace("\\s+", " ").splitOnCaseSwitch().trim() }
 
 	open fun isLeaf(): Boolean = childHashes.isEmpty()
 

@@ -35,7 +35,7 @@ internal abstract class WidgetParserI<T>: ParserI<Pair<ConcreteId,T>, UiElementP
 	 * to transform the model to the current (newer) id computation.
 	 * This mapping is supposed to be used to adapt the action targets in the trace parser (Interaction entries)
 	 */
-	private val idMapping: ConcurrentHashMap<ConcreteId, ConcreteId> = ConcurrentHashMap()
+	internal val idMapping: ConcurrentHashMap<ConcreteId, ConcreteId> = ConcurrentHashMap()
 
 	protected fun computeWidget(line: List<String>, id: ConcreteId): Pair<ConcreteId,UiElementPropertiesI> {
 		log("compute widget $id")

@@ -35,6 +35,7 @@ import kotlin.coroutines.coroutineContext
 /** public interface, used to parse any model
  * @modelProvider only required for extendedModel types to parse the correct type instance and use overwitten functions, use format (appName,modelCfg)->ExtendedModel
  * **/
+@Suppress("unused")
 object ModelParser{
 	@JvmOverloads suspend fun loadModel(config: ModelConfig, watcher: LinkedList<ModelFeatureI> = LinkedList(),
 	                                    autoFix: Boolean = false, sequential: Boolean = false, enablePrint: Boolean = false,
@@ -49,6 +50,14 @@ object ModelParser{
 			ModelParserP(config, compatibilityMode = autoFix, enablePrint = enablePrint, reader = contentReader, enableChecks = enableChecks, modelProvider = modelProvider).loadModel(watcher, customHeaderMap)
 		}, inMillis = true)
 	}
+
+	/** returning the model map of origId->newId for states and widgets */
+	suspend fun loadAndRepair(config: ModelConfig, modelProvider: (ModelConfig)->Model = {Model.emptyModel(config)}): Triple<Model, Map<ConcreteId,ConcreteId>,Map<ConcreteId,ConcreteId>>{
+		val parser =
+			ModelParserS(config, compatibilityMode = true, enablePrint = false, reader = ContentReader(config), enableChecks = true, modelProvider = modelProvider)
+		val model = parser.loadModel(LinkedList(), emptyMap())
+		return Triple(model,parser.stateMap,parser.widgetMap)
+	}
 }
 
 internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>>{
@@ -59,7 +68,9 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 	abstract val stateParser: StateParserI<S, W>
 	abstract val widgetParser: WidgetParserI<W>
 	abstract val enablePrint: Boolean
-	abstract 	val isSequential: Boolean
+	abstract val isSequential: Boolean
+	abstract val stateMap: Map<ConcreteId,ConcreteId>
+	abstract val widgetMap: Map<ConcreteId,ConcreteId>
 
 	override val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -145,10 +156,10 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 
 		val srcId = fromString(actionS[Interaction.srcStateIdx])!!
 		val srcState = stateParser.queue.computeIfAbsent(srcId,stateParser.parseIfAbsent(coroutineContext)).getState()
-		verify("ERROR could not find target widget $targetWidgetId in source state $srcId", {
+		verify("ERROR stateId changed, recompute target widget $targetWidgetId in source state $srcId", {
 
 			log("wait for srcState $srcId")
-			targetWidgetId == null || srcState.widgets.any { it.id == targetWidgetId }
+			targetWidgetId == null || resState.stateId == resId
 		}){ // repair function
 			val actionType = actionS[Interaction.actionTypeIdx]
 			var srcS = stateParser.queue[srcId]
@@ -156,14 +167,20 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 				delay(5)
 				srcS = stateParser.queue[srcId]
 			}
-			val possibleTargets = srcState.widgets.filter {
-				targetWidgetId!!.uid == it.uid && it.isInteractive && rightActionType(it,actionType)}
-			when(possibleTargets.size){
-				0 -> throw IllegalStateException("cannot re-compute targetWidget $targetWidgetId in state $srcId")
-				1 -> widgetParser.addFixedWidgetId(targetWidgetId!!, possibleTargets.first().id)
-				else -> {
-					println("WARN there are multiple options for the interacted target widget we just chose the first one")
-					widgetParser.addFixedWidgetId(targetWidgetId!!, possibleTargets.first().id)
+			val mapped = widgetMap[targetWidgetId]
+			val target = srcState.widgets.find{it.id == mapped} ?: srcState.widgets.find{it.id == targetWidgetId && rightActionType(it, actionType)}
+			if(target == null) {
+				logger.error("no id mappig found for source widget $targetWidgetId choose the first match with same id")
+				val possibleTargets = srcState.widgets.filter {
+					targetWidgetId!!.uid == it.uid && it.isInteractive && rightActionType(it, actionType)
+				}
+				when (possibleTargets.size) {
+					0 -> throw IllegalStateException("cannot re-compute targetWidget $targetWidgetId in state $srcId")
+					1 -> widgetParser.addFixedWidgetId(targetWidgetId!!, possibleTargets.first().id)
+					else -> {
+						println("WARN there are multiple options for the interacted target widget we just chose the first one")
+						widgetParser.addFixedWidgetId(targetWidgetId!!, possibleTargets.first().id)
+					}
 				}
 			}
 		}
@@ -175,7 +192,7 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 		fixedActionS[Interaction.srcStateIdx] = srcState.stateId.toString()  //do NOT use local val srcId as that may be the old id
 
 		if(actionS!=fixedActionS)
-			println("id's changed due to automatic repair new action is \n $fixedActionS\n instead of \n $actionS")
+			logger.trace("id's changed due to automatic repair new action is \n $fixedActionS\n instead of \n $actionS")
 
 		return Pair(StringCreator.parseActionPropertyString(fixedActionS, targetWidget), resState)
 				.also { (action,_) ->
@@ -274,6 +291,8 @@ internal open class ModelParserP(override val config: ModelConfig, override val 
 
 	override val widgetParser by lazy { WidgetParserP(model, compatibilityMode, enableChecks) }
 	override val stateParser  by lazy { StateParserP(widgetParser, reader, model, compatibilityMode, enableChecks) }
+	override val stateMap by lazy{ stateParser.idMapping }
+	override val widgetMap by lazy{ widgetParser.idMapping }
 
 	override val processor: suspend (s: List<String>, CoroutineScope) -> Deferred<Pair<Interaction, State>> = { actionS, _ ->
 		CoroutineScope(coroutineContext+Job()).async(CoroutineName(actionParseJobName(actionS))) { parseAction(actionS) }
@@ -296,6 +315,8 @@ private class ModelParserS(override val config: ModelConfig, override val reader
 
 	override val widgetParser by lazy { WidgetParserS(model, compatibilityMode, enableChecks) }
 	override val stateParser  by lazy { StateParserS(widgetParser, reader, model, compatibilityMode, enableChecks) }
+	override val stateMap by lazy{ stateParser.idMapping }
+	override val widgetMap by lazy{ widgetParser.idMapping }
 
 	override val processor: suspend (s: List<String>, CoroutineScope) -> Pair<Interaction, State> = { actionS:List<String>, _ ->
 		parseAction(actionS)
