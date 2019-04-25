@@ -79,8 +79,6 @@ internal abstract class StateParserI<T,W>: ParserI<T, State>{
 				}
 			}
 		}
-		if(enableChecks && uiProperties.any{ (id,_) -> idMapping.keys.none { it==id } && widgets.none { it.id == id }})
-			logger.error("incomplete widget-id mapping")
 		model.incWidgetCounter(widgets.size)
 
 		return if (widgets.isNotEmpty()) {
@@ -93,7 +91,7 @@ internal abstract class StateParserI<T,W>: ParserI<T, State>{
 				}
 				model.addState(newState)
 			}
-		} else model.emptyState
+		} else model.emptyState.also { model.addState(it) } // the model should contain the empty state if it was in the trace, to prevent any strange behavior when trying to lookup this state later
 	}
 
 	fun fixedStateId(idString: String) = ConcreteId.fromString(idString).let{	idMapping[it] ?: it }

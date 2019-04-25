@@ -27,7 +27,7 @@ internal interface ParserI<T,out R>{
 			if (!c())
 				throw IllegalStateException("invalid Model(enable compatibility mode to attempt transformation to valid state):\n$msg")
 		} else if(!c()){
-			logger.warn("had to apply repair function due to parse error '$msg' in thread [${Thread.currentThread().name}]")
+			logger.debug("had to apply repair function due to parse error '$msg' in thread [${Thread.currentThread().name}]")
 			repair()
 		}
 	}

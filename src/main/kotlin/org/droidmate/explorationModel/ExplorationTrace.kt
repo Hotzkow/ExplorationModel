@@ -219,7 +219,7 @@ open class ExplorationTrace(private val watcher: MutableList<ModelFeatureI> = mu
 	}
 
 	override fun hashCode(): Int {
-		return trace.hashCode()
+		return getActions().hashCode()
 	}
 
 	companion object {

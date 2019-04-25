@@ -8,6 +8,7 @@ import org.droidmate.explorationModel.config.ConfigProperties
 import org.droidmate.explorationModel.emptyId
 import java.io.BufferedReader
 import java.io.FileReader
+import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -32,8 +33,10 @@ open class ContentReader(val config: ModelConfig){
 	}
 
 	open fun getStateFile(stateId: ConcreteId): Pair<Path,Boolean>{
-		val contentPath = Files.list(Paths.get(config.stateDst.toUri())).use { it.toList() }.first {
-			it.fileName.toString().startsWith( stateId.toString()) }
+		val paths = Files.list(Paths.get(config.stateDst.toUri())).use { it.toList() }
+		if(paths.isEmpty()) throw IllegalStateException("Error no state-files found in ${config.stateDst.toUri()}")
+		val contentPath = paths.firstOrNull {	it.fileName.toString().startsWith( stateId.toString()) }
+			?: throw IllegalStateException("Error no state-file available for $stateId in ${config.stateDst.toUri()}")
 		return Pair(contentPath, contentPath.fileName.toString().contains("HS")//, it.substring(it.indexOf("_PN")+4,it.indexOf(config[ConfigProperties.ModelProperties.dump.stateFileExtension]))
 		)
 	}

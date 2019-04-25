@@ -23,6 +23,8 @@
 //
 // web: www.droidmate.org
 
+@file:Suppress("RemoveRedundantQualifierName")
+
 package org.droidmate.explorationModel.interaction
 
 import org.droidmate.deviceInterface.exploration.PType
@@ -69,7 +71,10 @@ open class Widget constructor(properties: UiElementPropertiesI,
 
 	/**------------------------------- open function default implementations ------------------------------------------**/
 
-	open val nlpText: String by lazy { "$hintText $text $contentDesc".replace("<newline>"," ").replace("\\s+", " ").splitOnCaseSwitch().trim() }
+	open val nlpText: String by lazy {
+		"$hintText $text $contentDesc".replace("<newline>", " ").replace("\\s+", " ").splitOnCaseSwitch().split(" ").filter { it.isNotBlank() }
+			.joinToString(separator = " ") { it.trim() }  // erase redundant spaces
+	}
 
 	open fun isLeaf(): Boolean = childHashes.isEmpty()
 
@@ -118,7 +123,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 		val emptyWidget by lazy{ Widget(DummyProperties,null) }
 
 		/**------------------------------------------ private methods ---------------------------------------------------**/
-		private fun String.splitOnCaseSwitch(): String{
+		fun String.splitOnCaseSwitch(): String{
 			if(this.isBlank()) return ""
 			var newString = ""
 			this.forEachIndexed { i, c ->
