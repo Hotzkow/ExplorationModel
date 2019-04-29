@@ -3,7 +3,9 @@ package org.droidmate.explorationModel.retention.loading
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.produce
 import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
-import org.droidmate.explorationModel.*
+import org.droidmate.explorationModel.ConcreteId
+import org.droidmate.explorationModel.Model
+import org.droidmate.explorationModel.ModelFeatureI
 import org.droidmate.explorationModel.config.ConfigProperties
 import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.interaction.Interaction
@@ -13,7 +15,6 @@ import org.droidmate.explorationModel.retention.StringCreator
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
 
 /** test interface for the model loader, which cannot be done with mockito due to coroutine incompatibility */
@@ -95,13 +96,14 @@ internal class ModelLoaderT(override val config: ModelConfig): ModelParserP(conf
 		get() = reader.testTraces
 		set(value) { reader.testTraces = value}
 
-	override suspend fun traceProducer() = GlobalScope.produce(Dispatchers.Default, capacity = 5, block = {
+	override fun traceProducer() =
+		produce<Path>(context = Dispatchers.IO+CoroutineName("trace Producer"), capacity = 5) {
 		log("Produce trace paths")
 		testTraces.forEach { log(it.toString() + "\n") }
 		for (i in 0 until testTraces.size) {
 			send(Paths.get(config[ConfigProperties.ModelProperties.dump.traceFilePrefix] + i.toString()))
 		}
-	})
+	}
 
 	override fun execute(testTraces: List<Collection<Interaction>>, testStates: Collection<State>, watcher: LinkedList<ModelFeatureI>): Model {
 //		logcat(testActions.)
