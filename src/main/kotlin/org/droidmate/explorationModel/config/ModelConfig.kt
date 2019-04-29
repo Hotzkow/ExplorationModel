@@ -31,6 +31,7 @@ import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.du
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.dump.traceFileExtension
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.dump.traceFilePrefix
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.cleanDirs
+import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.cleanImgs
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.defaultBaseDir
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.statesSubDir
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.imagesSubDir
@@ -57,6 +58,7 @@ class ModelConfig private constructor(path: Path,
 
 	init {  // initialize directories (clear them if cleanDirs is enabled)
 		if (!isLoadC){
+			if (config[cleanImgs]) imgDst.toFile().deleteRecursively()
 			if (config[cleanDirs]) (baseDir).toFile().deleteRecursively()
 			Files.createDirectories((baseDir))
 			Files.createDirectories((stateDst))

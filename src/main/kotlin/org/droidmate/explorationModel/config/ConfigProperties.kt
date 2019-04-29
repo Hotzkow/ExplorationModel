@@ -14,6 +14,7 @@ object ConfigProperties {
 			val statesSubDir by uriType
 			val imagesSubDir by uriType
 			val cleanDirs by booleanType
+			val cleanImgs by booleanType
 			val FeatureDir by uriType
 		}
 
