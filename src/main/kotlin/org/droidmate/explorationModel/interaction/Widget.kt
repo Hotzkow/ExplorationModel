@@ -72,7 +72,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	/**------------------------------- open function default implementations ------------------------------------------**/
 
 	open val nlpText: String by lazy {
-		"$hintText $text $contentDesc".replace("<newline>", " ").replace("\\s+", " ").replace("_"," ").splitOnCaseSwitch().split(" ").filter { it.isNotBlank() }
+		"$hintText $text $contentDesc".replace("<newline>", " ").replace("\\s+", " ").splitOnCaseSwitch().split(" ").filter { it.isNotBlank() }
 			.joinToString(separator = " ") { it.trim() }  // erase redundant spaces
 	}
 
@@ -96,8 +96,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 			else -> uidString.toUUID()
 		}
 		!isKeyboard && nlpText.isNotBlank() -> { // compute id from textual nlpText if there is any
-			val ignoreNumbers = nlpText.replace("[0-9]", "")
-			if (ignoreNumbers.isNotEmpty()) ignoreNumbers.toUUID()
+			if (nlpText.isNotEmpty()) nlpText.toUUID()
 			else nlpText.toUUID()
 		}
 		else -> // we have an Widget without any visible text
@@ -128,7 +127,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 			var newString = ""
 			this.forEachIndexed { i, c ->
 				newString += when{
-					c.isWhitespace() -> " "
+					c=='_' || c.isWhitespace() -> " "
 					!c.isLetter() -> ""
 					c.isUpperCase() && i>0 && this[i-1].isLowerCase() -> " $c"
 					else -> c
