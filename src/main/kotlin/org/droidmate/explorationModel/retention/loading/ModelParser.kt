@@ -12,10 +12,7 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
-import org.droidmate.deviceInterface.exploration.isClick
-import org.droidmate.deviceInterface.exploration.isLongClick
-import org.droidmate.deviceInterface.exploration.isTextInsert
+import org.droidmate.deviceInterface.exploration.*
 import org.droidmate.explorationModel.*
 import org.droidmate.explorationModel.config.*
 import org.droidmate.explorationModel.interaction.Interaction
@@ -177,7 +174,7 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 			}
 			val mapped = widgetMap[targetWidgetId]
 			val target = srcState.widgets.find{it.id == mapped} ?: srcState.widgets.find{it.id == targetWidgetId && rightActionType(it, actionType)}
-			if(target == null) {
+			if(targetWidgetId != null && target == null) {
 				logger.error("no id mappig found for source widget $targetWidgetId choose the first match with same id")
 				val possibleTargets = srcState.widgets.filter {
 					targetWidgetId!!.uid == it.uid && it.isInteractive && rightActionType(it, actionType)
@@ -209,7 +206,8 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 	}
 	private val rightActionType: (Widget, actionType: String)->Boolean = { w, t ->
 		w.enabled && when{
-			t.isClick() -> w.clickable || w.checked != null
+			t.isTick() -> w.checked != null
+			t.isClick() -> w.clickable || w.checked != null || w.longClickable  // allow for long-clickable due to clickOrLongClickAction
 			t.isLongClick() -> w.longClickable
 			t.isTextInsert() -> w.isInputField
 			else -> false
