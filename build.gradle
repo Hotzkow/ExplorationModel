@@ -1,7 +1,7 @@
 
 
 
-version '1.1.1-RC1'
+version '1.3.2-RC0'
 
 buildscript {
 	project.ext {
@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-	compile 'com.github.hotzkow:platformInterfaceLib:master-SNAPSHOT' // in theory it should be 'api', but for some reason that does not work for transitive classpath dependencies
+	compile 'com.github.hotzkow:platformInterfaceLib:2.3-RC0' // in theory it should be 'api', but for some reason that does not work for transitive classpath dependencies
 	implementation 'com.natpryce:konfig:1.6.6.0'  // configuration library
 	implementation 'org.slf4j:slf4j-api:1.7.25'
 
