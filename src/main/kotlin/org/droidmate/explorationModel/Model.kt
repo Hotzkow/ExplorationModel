@@ -55,7 +55,7 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 	/** dummy element if a state has to be given but no widget data is available */
 	open val emptyState: State by lazy { State( emptyList() ) }
 
-	open fun initNewTrace(watcher: LinkedList<ModelFeatureI>,id: UUID = UUID.randomUUID()): ExplorationTrace {
+	open fun initNewTrace(watcher: MutableList<ModelFeatureI>,id: UUID = UUID.randomUUID()): ExplorationTrace {
 	return ExplorationTrace(watcher, config, id, emptyState).also { actionTrace ->
 			paths.add(actionTrace)
 		}
