@@ -138,14 +138,18 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 				.let { trace ->
 					val actionPairs = reader.processLines(tracePath, lineProcessor = processor)
 					// use maximal parallelism to process the single actions/states
-					if (watcher.isEmpty()){
-						val resState = getElem(actionPairs.last()).second
-						logger.debug(" wait for completion of actions")
-						trace.updateAll(actionPairs.map { getElem(it).first }, resState)
-					}  // update trace actions
-					else {
-						logger.debug(" wait for completion of EACH action")
-						actionPairs.forEach { getElem(it).let{ (action,resState) -> trace.update(action, resState) }}
+					if(actionPairs.isNotEmpty()) {
+						if (watcher.isEmpty()) {
+							val resState = getElem(actionPairs.last()).second
+							logger.debug(" wait for completion of actions")
+							trace.updateAll(actionPairs.map { getElem(it).first }, resState)
+						}  // update trace actions
+						else {
+							logger.debug(" wait for completion of EACH action")
+							actionPairs.forEach { getElem(it).let { (action, resState) -> trace.update(action, resState) } }
+						}
+					} else {
+						logger.info("trace $traceId is empty")
 					}
 				}
 			logger.debug("CONSUMED trace {}",tracePath.fileName)
@@ -177,14 +181,14 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 			if(targetWidgetId != null && target == null) {
 				logger.error("no id mappig found for source widget $targetWidgetId choose the first match with same id")
 				val possibleTargets = srcState.widgets.filter {
-					targetWidgetId!!.uid == it.uid && it.isInteractive && rightActionType(it, actionType)
+					targetWidgetId.uid == it.uid && it.isInteractive && rightActionType(it, actionType)
 				}
 				when (possibleTargets.size) {
 					0 -> throw IllegalStateException("cannot re-compute targetWidget $targetWidgetId in state $srcId")
-					1 -> widgetParser.addFixedWidgetId(targetWidgetId!!, possibleTargets.first().id)
+					1 -> widgetParser.addFixedWidgetId(targetWidgetId, possibleTargets.first().id)
 					else -> {
 						println("WARN there are multiple options for the interacted target widget we just chose the first one")
-						widgetParser.addFixedWidgetId(targetWidgetId!!, possibleTargets.first().id)
+						widgetParser.addFixedWidgetId(targetWidgetId, possibleTargets.first().id)
 					}
 				}
 			}
