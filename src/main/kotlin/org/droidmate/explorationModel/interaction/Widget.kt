@@ -127,7 +127,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 			var newString = ""
 			this.forEachIndexed { i, c ->
 				newString += when{
-					c=='_' || c.isWhitespace() -> " "
+					c.isWhitespace() || c=='_' || c=='/' || c=='.' || c=='-' || c==',' -> " "
 					!c.isLetter() -> ""
 					c.isUpperCase() && i>0 && this[i-1].isLowerCase() -> " $c"
 					else -> c
