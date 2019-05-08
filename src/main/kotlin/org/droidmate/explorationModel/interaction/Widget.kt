@@ -72,7 +72,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	/**------------------------------- open function default implementations ------------------------------------------**/
 
 	open val nlpText: String by lazy {
-		"$hintText $text $contentDesc".replace("<newline>", " ").replace("\\s+", " ").splitOnCaseSwitch().split(" ").filter { it.isNotBlank() }
+		"$hintText $text $contentDesc".replace("<newline>", " ").replace("\\s+", " ").splitOnCaseSwitch().split(" ").distinct().filter { it.isNotBlank() }
 			.joinToString(separator = " ") { it.trim() }  // erase redundant spaces
 	}
 
