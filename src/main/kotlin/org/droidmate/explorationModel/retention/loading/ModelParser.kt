@@ -179,9 +179,15 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 			val mapped = widgetMap[targetWidgetId]
 			val target = srcState.widgets.find{it.id == mapped} ?: srcState.widgets.find{it.id == targetWidgetId && rightActionType(it, actionType)}
 			if(targetWidgetId != null && target == null) {
-				logger.warn("no id mappig found for source widget $targetWidgetId choose the first match with same id")
+				logger.warn("no id mappig found for source widget $targetWidgetId choose the first match with same uid")
 				val possibleTargets = srcState.widgets.filter {
-					targetWidgetId.uid == it.uid && it.isInteractive && rightActionType(it, actionType)
+					targetWidgetId.uid == it.uid && rightActionType(it, actionType)
+				}.let{
+					if(it.isEmpty()){
+						val uidM = srcState.widgets.filter { targetWidgetId.uid == it.uid }
+						logger.warn("cannot find any element with matching actiontype (e.g. if there was a forced click to a non-clickable target), choose first from $uidM")
+						uidM
+					} else it
 				}
 				when (possibleTargets.size) {
 					0 -> throw IllegalStateException("cannot re-compute targetWidget $targetWidgetId in state $srcId")
