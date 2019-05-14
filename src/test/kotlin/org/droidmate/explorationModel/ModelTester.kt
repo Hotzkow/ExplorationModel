@@ -28,7 +28,7 @@ class ModelTester: TestI, TestModel by DefaultTestModel() {
 		val emptyWidget = Widget.emptyWidget
 		expect(parentWidget.configId.toString(), "20ef5802-33dc-310b-8efc-c791586ede85")  // quickFix due to new UiElementP constructor
 		expect(emptyWidget.configId, parentWidget.configId)
-		expect(parentWidget.id.toString(),"4d910bd0-9ce1-32bf-b162-4e5a743620b2_${parentWidget.configId}")
+		expect(parentWidget.id.toString(),"f3290220-b5dc-3665-b30e-d533f658d117_${parentWidget.configId}")
 		expect(testWidget.parentId, emptyWidget.id)
 
 		expect(testWidget.configId, UUID.fromString("5d802df8-481b-3882-9c3b-95ea87b08a03"))

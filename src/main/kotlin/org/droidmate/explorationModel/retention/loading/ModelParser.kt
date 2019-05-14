@@ -51,11 +51,12 @@ object ModelParser{
 	/** returning the model map of origId->newId for states and widgets */
 	suspend fun loadAndRepair(config: ModelConfig,
 	                          modelProvider: (ModelConfig)->Model = {Model.emptyModel(config)},
-	                          sequential: Boolean = true): Triple<Model, Map<ConcreteId,ConcreteId>,Map<ConcreteId,ConcreteId>>{
+	                          sequential: Boolean = true,
+	                          enablePrint: Boolean = false): Triple<Model, Map<ConcreteId,ConcreteId>,Map<ConcreteId,ConcreteId>>{
 		val parser = if (sequential)
-			ModelParserS(config, compatibilityMode = true, enablePrint = false, reader = ContentReader(config), enableChecks = true, modelProvider = modelProvider)
+			ModelParserS(config, compatibilityMode = true, enablePrint = enablePrint, reader = ContentReader(config), enableChecks = true, modelProvider = modelProvider)
 		else
-			ModelParserP(config, compatibilityMode = true, enablePrint = false, reader = ContentReader(config), enableChecks = true, modelProvider = modelProvider)
+			ModelParserP(config, compatibilityMode = true, enablePrint = enablePrint, reader = ContentReader(config), enableChecks = true, modelProvider = modelProvider)
 
 		val model = parser.loadModel(LinkedList(), emptyMap())
 		logger.info("model parsing complete '${config.appName}' : $model, state repairs = ${parser.stateMap.size}, widget repairs = ${parser.widgetMap.size}")
@@ -158,7 +159,7 @@ internal abstract class ModelParserI<T,S,W>: ParserI<T, Pair<Interaction, State>
 
 	/** parse a single action this function is called in the processor either asynchronous (Deferred) or sequential (blocking) */
 	suspend fun parseAction(actionS: List<String>): Pair<Interaction, State> {
-		if(enablePrint) println("\n\t ---> parse action $actionS")
+		if(enablePrint) logger.trace("\n\t ---> parse action $actionS")
 		val resId = ConcreteId.fromString(actionS[Interaction.resStateIdx])!!
 		val resState = stateParser.queue.computeIfAbsent(resId, stateParser.parseIfAbsent(coroutineContext)).getState()
 		val targetWidgetId = widgetParser.fixedWidgetId(actionS[Interaction.widgetIdx])
