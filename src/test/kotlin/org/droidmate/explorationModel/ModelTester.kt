@@ -2,7 +2,6 @@ package org.droidmate.explorationModel
 
 import org.droidmate.explorationModel.interaction.Widget
 import org.droidmate.explorationModel.retention.StringCreator
-import org.droidmate.explorationModel.retention.loading.dataString
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith

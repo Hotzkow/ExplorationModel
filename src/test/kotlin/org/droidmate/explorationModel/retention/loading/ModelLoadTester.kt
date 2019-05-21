@@ -4,8 +4,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.droidmate.deviceInterface.exploration.ActionType
 import org.droidmate.deviceInterface.exploration.Click
+import org.droidmate.explorationModel.*
 import org.droidmate.explorationModel.DefaultTestModel
-import org.droidmate.explorationModel.TestI
 import org.droidmate.explorationModel.TestModel
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -13,16 +13,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.junit.runners.MethodSorters
 import org.droidmate.explorationModel.config.ModelConfig
-import org.droidmate.explorationModel.createTestAction
 import org.droidmate.explorationModel.interaction.*
-import org.droidmate.explorationModel.retention.StringCreator
 import java.util.*
 
 private val config = ModelConfig("JUnit", true)
-
-fun Widget.dataString(sep: String) = StringCreator.createPropertyString(this,sep)
-fun Interaction.actionString(sep: String) = StringCreator.createActionString(this,sep)
-internal val emptyState = State(emptyList())
 
 /** verify the ModelLoader correctly initializes/loads a model by using
  * - mocked model (mock the dump-file nlpText read)
