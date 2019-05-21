@@ -18,10 +18,6 @@
 // Nataniel Borges Jr. <nataniel dot borges at cispa dot saarland>
 // Jenny Hotzkow <jenny dot hotzkow at cispa dot saarland>
 //
-// Former Maintainers:
-// Konrad Jamrozik <jamrozik at st dot cs dot uni-saarland dot de>
-//
-// web: www.droidmate.org
 
 @file:Suppress("RemoveRedundantQualifierName")
 

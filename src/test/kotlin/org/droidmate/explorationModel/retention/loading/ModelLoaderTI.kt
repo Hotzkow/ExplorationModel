@@ -1,17 +1,20 @@
 package org.droidmate.explorationModel.retention.loading
 
+import com.sun.management.jmx.Trace.send
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.produce
 import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
 import org.droidmate.explorationModel.ConcreteId
-import org.droidmate.explorationModel.Model
 import org.droidmate.explorationModel.ModelFeatureI
 import org.droidmate.explorationModel.config.ConfigProperties
 import org.droidmate.explorationModel.config.ModelConfig
+import org.droidmate.explorationModel.factory.AbstractModel
+import org.droidmate.explorationModel.factory.DefaultModelProvider
 import org.droidmate.explorationModel.interaction.Interaction
 import org.droidmate.explorationModel.interaction.State
 import org.droidmate.explorationModel.interaction.Widget
 import org.droidmate.explorationModel.retention.StringCreator
+import org.droidmate.explorationModel.retention.loading.ModelParser.loadModel
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
@@ -21,19 +24,19 @@ import java.util.*
 internal interface ModelLoaderTI{
 	val sep: String
 	var testTraces: List<Collection<Interaction>>
-	var testStates: Collection<State>
+	var testStates: Collection<State<Widget>>
 
-	fun execute(testTraces: List<Collection<Interaction>>, testStates: Collection<State>, watcher: LinkedList<ModelFeatureI> = LinkedList()): Model
+	fun execute(testTraces: List<Collection<Interaction>>, testStates: Collection<State<Widget>>, watcher: LinkedList<ModelFeatureI> = LinkedList()): AbstractModel<State<Widget>,Widget>
 	suspend fun parseWidget(widget: Widget): UiElementPropertiesI?
 
 	/** REMARK these are state dependent => use very carefully in Unit-Tests */
-	val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State>
-	suspend fun parseState(stateId: ConcreteId): State
+	val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State<Widget>>
+	suspend fun parseState(stateId: ConcreteId): State<Widget>
 
 }
 
 class TestReader(config: ModelConfig): ContentReader(config){
-	lateinit var testStates: Collection<State>
+	lateinit var testStates: Collection<State<Widget>>
 	lateinit var testTraces: List<Collection<Interaction>>
 	private val traceContents: (idx: Int) -> List<String> = { idx ->
 		testTraces[idx].map { actionData -> 	StringCreator.createActionString(actionData, ";").also { log(it) } } }
@@ -71,7 +74,7 @@ class TestReader(config: ModelConfig): ContentReader(config){
 }
 
 @ExperimentalCoroutinesApi
-internal class ModelLoaderT(override val config: ModelConfig): ModelParserP(config, enableChecks = true), ModelLoaderTI {
+internal class ModelLoaderT(override val config: ModelConfig): ModelParserP<State<Widget>,Widget>(config, enableChecks = true, modelProvider = DefaultModelProvider(config)), ModelLoaderTI {
 	override val sep: String= config[ConfigProperties.ModelProperties.dump.sep]
 
 	/** creating test environment */
@@ -83,13 +86,13 @@ internal class ModelLoaderT(override val config: ModelConfig): ModelParserP(conf
 	override fun log(msg: String) = println("TestModelLoader[${Thread.currentThread().name}] $msg")
 
 	/** implementing ModelParser default methods */
-	override val widgetParser by lazy { WidgetParserP(model, compatibilityMode, enableChecks) }
-	override val stateParser  by lazy { StateParserP(widgetParser, reader, model, compatibilityMode, enableChecks) }
+	override val widgetParser by lazy { WidgetParserP(modelProvider, compatibilityMode, enableChecks) }
+	override val stateParser  by lazy { StateParserP(widgetParser, reader, modelProvider, compatibilityMode, enableChecks) }
 
 	/** custom test environment */
 //	override val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State> = processor
-	override val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State> = { args,scope -> processor(args,scope).await() }
-	override var testStates: Collection<State>
+	override val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State<Widget>> = { args,scope -> processor(args,scope).await() }
+	override var testStates: Collection<State<Widget>>
 		get() = reader.testStates
 		set(value) { reader.testStates = value}
 	override var testTraces: List<Collection<Interaction>>
@@ -105,7 +108,7 @@ internal class ModelLoaderT(override val config: ModelConfig): ModelParserP(conf
 		}
 	}
 
-	override fun execute(testTraces: List<Collection<Interaction>>, testStates: Collection<State>, watcher: LinkedList<ModelFeatureI>): Model {
+	override fun execute(testTraces: List<Collection<Interaction>>, testStates: Collection<State<Widget>>, watcher: LinkedList<ModelFeatureI>): AbstractModel<State<Widget>,Widget> {
 //		logcat(testActions.)
 		this.testTraces = testTraces
 		this.testStates = testStates
@@ -116,7 +119,7 @@ internal class ModelLoaderT(override val config: ModelConfig): ModelParserP(conf
 				StringCreator.createPropertyString(widget, sep).split(sep), CoroutineScope(coroutineContext)
 		))
 
-	override suspend fun parseState(stateId: ConcreteId): State = stateParser.getElem( stateParser.parseIfAbsent(coroutineContext)(stateId) )
+	override suspend fun parseState(stateId: ConcreteId): State<Widget> = stateParser.getElem( stateParser.parseIfAbsent(coroutineContext)(stateId) )
 }
 
 private const val debugString = "881086d0-66da-39d3-89a7-3ef465ab4971;ccff4dcd-b1ec-3ebf-b2e0-8757b1f8119f;android.view.ViewGroup;true;;;null;true;true;true;false;false;disabled;false;false;false;789;63;263;263;;//android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.HorizontalScrollView[1]/android.widget.LinearLayout[1]/android.view.ViewGroup[4];false;ch.bailu.aat\n" +

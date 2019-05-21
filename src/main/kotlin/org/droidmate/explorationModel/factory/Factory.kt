@@ -16,17 +16,13 @@
  *
  */
 
-package org.droidmate.explorationModel
+package org.droidmate.explorationModel.factory
 
-import junit.framework.TestCase
-
-interface TestI {
-	fun<T> expect(res:T, ref: T){
-		val refSplit = ref.toString().split(";")
-		val diff = res.toString().split(";").mapIndexed { index, s ->
-			if(refSplit.size>index) s.replace(refSplit[index],"#CORRECT#")
-			else s
-		}
-		TestCase.assertTrue("expected \n${ref.toString()} \nbut result was \n${res.toString()}\n DIFF = $diff", res == ref)
-	}
+interface Factory<T,ARG> {
+	/** may be used for easy testing (mock) for this class */
+	var mocked: T?
+	fun create(arg: ARG): T
+	fun lazyCreate(arg: ARG): Lazy<T> = lazy { create(arg) }
+	fun empty(): T
 }
+

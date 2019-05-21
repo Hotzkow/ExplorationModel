@@ -1,27 +1,22 @@
-// DroidMate, an automated execution generator for Android apps.
-// Copyright (C) 2012-2018. Saarland University
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-// Current Maintainers:
-// Nataniel Borges Jr. <nataniel dot borges at cispa dot saarland>
-// Jenny Hotzkow <jenny dot hotzkow at cispa dot saarland>
-//
-// Former Maintainers:
-// Konrad Jamrozik <jamrozik at st dot cs dot uni-saarland dot de>
-//
-// web: www.droidmate.org
+/*
+ * Copyright (c) 2019.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+@file:Suppress("MemberVisibilityCanBePrivate")
 
 package org.droidmate.explorationModel.interaction
 
@@ -40,7 +35,7 @@ import java.util.*
  * You should avoid creating instances of State directly and instead use the model to generate states
  * in order to avoid incompatibilities with extension classes of State.
  * */
-open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = false) {
+open class State<W: Widget> (_widgets: Collection<W>, val isHomeScreen: Boolean = false) {
 
 	val stateId by lazy {
 		ConcreteId(uid, configId)
@@ -140,7 +135,7 @@ open class State (_widgets: Collection<Widget>, val isHomeScreen: Boolean = fals
 
 	override fun equals(other: Any?): Boolean {
 		return when (other) {
-			is State -> uid == other.uid && configId == other.configId
+			is State<*> -> uid == other.uid && configId == other.configId
 			else -> false
 		}
 	}

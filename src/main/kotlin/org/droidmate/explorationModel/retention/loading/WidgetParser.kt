@@ -5,6 +5,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
 import org.droidmate.explorationModel.*
+import org.droidmate.explorationModel.factory.ModelProvider
+import org.droidmate.explorationModel.interaction.State
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
@@ -16,7 +18,7 @@ import org.droidmate.explorationModel.retention.WidgetProperty
 import org.droidmate.explorationModel.retention.getValue
 import kotlin.collections.HashMap
 
-internal abstract class WidgetParserI<T>: ParserI<Pair<ConcreteId,T>, UiElementPropertiesI> {
+internal abstract class WidgetParserI<T,S,W>: ParserI<Pair<ConcreteId,T>, UiElementPropertiesI, S, W> where S: State<W>, W: Widget {
 	var indicesComputed: AtomicBoolean = AtomicBoolean(false)
 	/** temporary map of all processed widgets for state parsing */
 	abstract val queue: MutableMap<ConcreteId, T>
@@ -88,9 +90,9 @@ internal abstract class WidgetParserI<T>: ParserI<Pair<ConcreteId,T>, UiElementP
 	}
 }
 
-internal class WidgetParserS(override val model: Model,
+internal class WidgetParserS<S,W>(override val modelProvider: ModelProvider<S, W>,
                              override val compatibilityMode: Boolean = false,
-                             override val enableChecks: Boolean = true): WidgetParserI<UiElementPropertiesI>(){
+                             override val enableChecks: Boolean = true): WidgetParserI<UiElementPropertiesI,S,W>() where S: State<W>, W: Widget{
 
 	override fun P_S_process(s: List<String>, id: ConcreteId, scope: CoroutineScope): Pair<ConcreteId,UiElementPropertiesI> = runBlocking{ computeWidget(s,id) }
 
@@ -99,9 +101,9 @@ internal class WidgetParserS(override val model: Model,
 	override val queue: MutableMap<ConcreteId, UiElementPropertiesI> = HashMap()
 }
 
-internal class WidgetParserP(override val model: Model,
+internal class WidgetParserP<S,W>(override val modelProvider: ModelProvider<S, W>,
                              override val compatibilityMode: Boolean = false,
-                             override val enableChecks: Boolean = true): WidgetParserI<Deferred<UiElementPropertiesI>>(){
+                             override val enableChecks: Boolean = true): WidgetParserI<Deferred<UiElementPropertiesI>,S,W>() where S: State<W>, W: Widget{
 
 
 	override fun P_S_process(s: List<String>, id: ConcreteId, scope: CoroutineScope): Pair<ConcreteId,Deferred<UiElementPropertiesI>>

@@ -1,27 +1,20 @@
-// DroidMate, an automated execution generator for Android apps.
-// Copyright (C) 2012-2018. Saarland University
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-// Current Maintainers:
-// Nataniel Borges Jr. <nataniel dot borges at cispa dot saarland>
-// Jenny Hotzkow <jenny dot hotzkow at cispa dot saarland>
-//
-// Former Maintainers:
-// Konrad Jamrozik <jamrozik at st dot cs dot uni-saarland dot de>
-//
-// web: www.droidmate.org
+/*
+ * Copyright (c) 2019.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 package org.droidmate.explorationModel
 
@@ -30,7 +23,6 @@ import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
 import org.droidmate.explorationModel.config.ConfigProperties
 import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.interaction.*
-import org.droidmate.explorationModel.retention.loading.ModelParser
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -45,7 +37,7 @@ import kotlin.system.measureTimeMillis
  * any direct call of launch/async is in this scope and will be waited for at the end of this lifecycle (end of exploration)
  * meanwhile we use currentScope or coroutineScope/supervisorScope to directly wait for child jobs before returning from a function call
  */
-open class Model protected constructor(val config: ModelConfig): CoroutineScope {
+open class Model constructor(val config: ModelConfig): CoroutineScope {
 
 	protected val paths = LinkedList<ExplorationTrace>()
 	/** non-mutable view of all traces contained within this model */
@@ -53,7 +45,7 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 
 /**---------------------------------- public interface --------------------------------------------------------------**/
 	/** dummy element if a state has to be given but no widget data is available */
-	open val emptyState: State by lazy { State( emptyList() ) }
+	open val emptyState: State<*> by lazy { State( emptyList() ) }
 
 	open fun initNewTrace(watcher: MutableList<ModelFeatureI>,id: UUID = UUID.randomUUID()): ExplorationTrace {
 	return ExplorationTrace(watcher, config, id, emptyState).also { actionTrace ->
@@ -63,10 +55,10 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 
 	// we use supervisorScope for the dumping, such that cancellation and exceptions are only propagated downwards
 	// meaning if a dump process fails the overall model process is not affected
-	open fun dumpModel(config: ModelConfig): Job = this.launch(CoroutineName("Model-dump")+backgroundJob){
+	open fun dumpModel(config: ModelConfig): Job = this.launch(CoroutineName("DefaultModel-dump")+backgroundJob){
 		getStates().let { states ->
-			debugOut("dump Model with ${states.size}")
-			states.forEach { s -> launch(CoroutineName("state-dump ${s.uid}")) { s.dump(config) } }
+			debugOut("dump DefaultModel with ${states.size}")
+			states.forEach { s:State<*> -> launch(CoroutineName("state-dump ${s.uid}")) { s.dump(config) } }
 		}
 		paths.forEach { t -> launch(CoroutineName("trace-dump")) { t.dump(config) } }
 	}
@@ -105,17 +97,17 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 	 */
 	suspend fun cancelAndJoin() = coroutineContext[Job]!!.cancelAndJoin()
 
-	private val states = CollectionActor(HashSet<State>(), "StateActor").create()
+	private val states = CollectionActor(HashSet<State<*>>(), "StateActor").create()
 	/** @return a view to the data (suspending function) */
-	suspend fun getStates(): Set<State> = states.getAll()
+	suspend fun getStates(): Set<State<*>> = states.getAll()
 
 	/** should be used only by model loader/parser */
-	internal suspend fun addState(s: State){
+	internal suspend fun addState(s: State<*>){
 		nStates +=1
 		states.send(Add(s))
 	}
 
-	suspend fun getState(id: ConcreteId): State?{
+	suspend fun getState(id: ConcreteId): State<*>?{
 		val states = getStates()
 		return states.find { it.stateId == id }
 	}
@@ -130,11 +122,11 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 	/** -------------------------------------- protected generator methods --------------------------------------------**/
 
 	/** used on model update to instantiate a new state for the current UI screen */
-	protected open fun generateState(action: ActionResult, widgets: Collection<Widget>): State =
+	protected open fun generateState(action: ActionResult, widgets: Collection<Widget>): State<*> =
 			with(action.guiSnapshot) { State(widgets, isHomeScreen) }
 
 	/** used by ModelParser to create [State] object from persisted data */
-	open fun parseState(widgets: Collection<Widget>, isHomeScreen: Boolean): State =
+	open fun parseState(widgets: Collection<Widget>, isHomeScreen: Boolean): State<*> =
 			State(widgets, isHomeScreen)
 
 	/** override this function if the Widget class was extended to create the custom object here */
@@ -181,7 +173,7 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 	companion object {
         val logger: Logger by lazy { LoggerFactory.getLogger(this::class.java) }
 
-		/** only use as default value shortcut but never fixed to create a Model, since that would break extendability */
+		/** only use as default value shortcut but never fixed to create a DefaultModel, since that would break extendability */
 		@JvmStatic
 		fun emptyModel(config: ModelConfig): Model = Model(config).apply { runBlocking { addState(emptyState) }}
 
@@ -192,9 +184,9 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 		 * val test = loadAppModel("ch.bailu.aat")
 		 * runBlocking { println("$test #widgets=${test.getWidgets().size} #states=${test.getStates().size} #paths=${test.getPaths().size}") }
 		 */
-		@Suppress("unused")
-		@JvmStatic fun loadAppModel(appName: String, watcher: LinkedList<ModelFeatureI> = LinkedList())
-				= runBlocking { ModelParser.loadModel(ModelConfig(appName = appName, isLoadC = true), watcher) }
+//		@Suppress("unused")
+//		@JvmStatic fun loadAppModel(appName: String, watcher: LinkedList<ModelFeatureI> = LinkedList())
+//				= runBlocking { ModelParser.loadModel(ModelConfig(appName = appName, isLoadC = true), watcher) }
 
 		/** debug method **/
 		@JvmStatic
@@ -230,6 +222,6 @@ open class Model protected constructor(val config: ModelConfig): CoroutineScope 
 	 * times the real set will contain less elements then these counter indicate
 	 */
 	override fun toString(): String {
-		return "Model[#addState=$nStates, #addWidget=$nWidgets, paths=${paths.size}]"
+		return "DefaultModel[#addState=$nStates, #addWidget=$nWidgets, paths=${paths.size}]"
 	}
 }
