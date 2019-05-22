@@ -57,7 +57,7 @@ class ModelLoadTester: TestI, TestModel by DefaultTestModel(), ModelLoaderTI by 
 	}
 
 	@Test fun loadMultipleActionsTest(){
-		val actions = LinkedList<Interaction>().apply {
+		val actions = LinkedList<Interaction<*>>().apply {
 			add(createTestAction(nextState = testState.stateId, actionType = "ResetAppExplorationAction"))
 			for(i in 1..5)
 				add(createTestAction(oldState = testState.stateId, nextState = testState.stateId, actionType = Click.name,

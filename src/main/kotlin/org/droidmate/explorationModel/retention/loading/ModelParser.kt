@@ -59,7 +59,7 @@ object ModelParser{
 	                                                           autoFix: Boolean = false, sequential: Boolean = false, enablePrint: Boolean = false,
 	                                                           contentReader: ContentReader = ContentReader(config), enableChecks: Boolean = true,
 	                                                           customHeaderMap: Map<String,String> = emptyMap()) =
-		loadModel(watcher,autoFix,sequential,enablePrint,DefaultModelProvider(config),contentReader,enableChecks,customHeaderMap)
+		loadModel(watcher,autoFix,sequential,enablePrint,DefaultModelProvider().apply { initConfig(config) },contentReader,enableChecks,customHeaderMap)
 	@JvmOverloads suspend fun<M: AbstractModel<State<*>,Widget>> loadModel(watcher: LinkedList<ModelFeatureI> = LinkedList(),
 	                                    autoFix: Boolean = false, sequential: Boolean = false, enablePrint: Boolean = false,
 	                                                           modelProvider: ModelProvider<M>,
@@ -92,7 +92,7 @@ object ModelParser{
 
 }
 
-internal abstract class ModelParserI<T,DeferredState,DeferredWidget,M: AbstractModel<State<*>,Widget>>: ParserI<T, Pair<Interaction, State<*>>,M>, CoroutineScope {
+internal abstract class ModelParserI<T,DeferredState,DeferredWidget,M: AbstractModel<State<*>,Widget>>: ParserI<T, Pair<Interaction<*>, State<*>>,M>, CoroutineScope {
 //	override 	val enableDebug get() = true
 
 	abstract val config: ModelConfig
@@ -184,7 +184,7 @@ internal abstract class ModelParserI<T,DeferredState,DeferredWidget,M: AbstractM
 	}
 
 	/** parse a single action this function is called in the processor either asynchronous (Deferred) or sequential (blocking) */
-	suspend fun parseAction(actionS: List<String>): Pair<Interaction, State<*>> {
+	suspend fun parseAction(actionS: List<String>): Pair<Interaction<*>, State<*>> {
 		if(enablePrint) logger.trace("\n\t ---> parse action $actionS")
 		val resId = ConcreteId.fromString(actionS[Interaction.resStateIdx])!!
 		val resState = stateParser.queue.computeIfAbsent(resId, stateParser.parseIfAbsent(coroutineContext)).getState()
@@ -293,7 +293,7 @@ internal abstract class ModelParserI<T,DeferredState,DeferredWidget,M: AbstractM
 				//MISSING translation of BoundsX,..Y,..Width,..Height to visibleBoundaries
 				//MISSING instead of parentHash we had parentID persisted
 			)
-val modelProvider = DefaultModelProvider(config)
+val modelProvider = DefaultModelProvider().apply { initConfig(config) }
 			val m =
 				//				loadModel(config, autoFix = false, sequential = true)
 				runBlocking { ModelParser.loadModel(config = config, autoFix = false, sequential = true, enablePrint = false//, customHeaderMap = headerMap
@@ -329,7 +329,7 @@ internal open class ModelParserP<M: AbstractModel<State<*>,Widget>>(override val
                                  override val compatibilityMode: Boolean = false, override val enablePrint: Boolean = false,
                                  override val enableChecks: Boolean = true,
                                  override val modelProvider: ModelProvider<M> )
-	: ModelParserI<Deferred<Pair<Interaction, State<*>>>, Deferred<State<*>>, Deferred<UiElementPropertiesI>,M>() {
+	: ModelParserI<Deferred<Pair<Interaction<*>, State<*>>>, Deferred<State<*>>, Deferred<UiElementPropertiesI>,M>() {
 	override val coroutineContext: CoroutineContext by lazy { Job() + CoroutineName("P-ModelParser ${config.appName}(${config.baseDir}") + Dispatchers.IO }
 	override val isSequential: Boolean = false
 
@@ -338,7 +338,7 @@ internal open class ModelParserP<M: AbstractModel<State<*>,Widget>>(override val
 	override val stateMap by lazy{ stateParser.idMapping }
 	override val widgetMap by lazy{ widgetParser.idMapping }
 
-	override val processor: suspend (s: List<String>, CoroutineScope) -> Deferred<Pair<Interaction, State<*>>> = { actionS, _ ->
+	override val processor: suspend (s: List<String>, CoroutineScope) -> Deferred<Pair<Interaction<*>, State<*>>> = { actionS, _ ->
 		CoroutineScope(coroutineContext+Job()).async(CoroutineName(actionParseJobName(actionS))) { parseAction(actionS) }
 	}
 
@@ -346,7 +346,7 @@ internal open class ModelParserP<M: AbstractModel<State<*>,Widget>>(override val
 		model.emptyState.let{ stateParser.queue[it.stateId] =  CoroutineScope(coroutineContext).async(CoroutineName("empty State")) { it } }
 	}
 
-	override suspend fun getElem(e: Deferred<Pair<Interaction, State<*>>>): Pair<Interaction, State<*>> = e.await()
+	override suspend fun getElem(e: Deferred<Pair<Interaction<*>, State<*>>>): Pair<Interaction<*>, State<*>> = e.await()
 
 }
 
@@ -354,7 +354,7 @@ private class ModelParserS<M: AbstractModel<State<*>,Widget>>(override val confi
                            override val compatibilityMode: Boolean = false, override val enablePrint: Boolean = false,
                            override val enableChecks: Boolean = true,
                            override val modelProvider: ModelProvider<M> )
-	: ModelParserI<Pair<Interaction, State<*>>, State<*>, UiElementPropertiesI,M>() {
+	: ModelParserI<Pair<Interaction<*>, State<*>>, State<*>, UiElementPropertiesI,M>() {
 	override val coroutineContext: CoroutineContext = Job() + CoroutineName("S-ModelParser ${config.appName}(${config.baseDir}") + Dispatchers.IO
 	override val isSequential: Boolean = true
 
@@ -363,7 +363,7 @@ private class ModelParserS<M: AbstractModel<State<*>,Widget>>(override val confi
 	override val stateMap by lazy{ stateParser.idMapping }
 	override val widgetMap by lazy{ widgetParser.idMapping }
 
-	override val processor: suspend (s: List<String>, CoroutineScope) -> Pair<Interaction, State<*>> = { actionS:List<String>, _ ->
+	override val processor: suspend (s: List<String>, CoroutineScope) -> Pair<Interaction<*>, State<*>> = { actionS:List<String>, _ ->
 		parseAction(actionS)
 	}
 
@@ -371,6 +371,6 @@ private class ModelParserS<M: AbstractModel<State<*>,Widget>>(override val confi
 		model.emptyState.let{ stateParser.queue[it.stateId] = it }
 	}
 
-	override suspend fun getElem(e: Pair<Interaction, State<*>>): Pair<Interaction, State<*>> = e
+	override suspend fun getElem(e: Pair<Interaction<*>, State<*>>): Pair<Interaction<*>, State<*>> = e
 
 }

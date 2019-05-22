@@ -72,7 +72,7 @@ abstract class ModelFeatureI : CoroutineScope {
 	 * The [targetWidgets] belong to the actions with hasWidgetTarget = true and are in the same order as they appeared
 	 * in the actionqueue.
 	 *
-	 * @actionIdx is the index of the produced Interaction within [ExplorationTrace.getActions], i.e. it is not the same as [Interaction.actionIdx]
+	 * @actionIdx is the index of the produced Interaction within [ExplorationTrace.getActions], i.e. it is not the same as Interaction.actionIdx
 	 *
 	 * WARNING: this method only gets `EmptyAction` when loading an already existing model
 	 **/
@@ -87,7 +87,7 @@ abstract class ModelFeatureI : CoroutineScope {
 	 * this function may be used instead of update for simpler access to the action and result state.
 	 *
 	 */
-	open suspend fun onNewAction(traceId: UUID, interactions: List<Interaction>, prevState: State<*>, newState: State<*>) { /* do nothing [to be overwritten] */
+	open suspend fun onNewAction(traceId: UUID, interactions: List<Interaction<*>>, prevState: State<*>, newState: State<*>) { /* do nothing [to be overwritten] */
 	}
 
 	/** can be used to persist any data during Exploration whenever ExplorationContext.dump is called.

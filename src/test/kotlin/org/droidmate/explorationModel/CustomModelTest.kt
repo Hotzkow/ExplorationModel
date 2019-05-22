@@ -45,7 +45,11 @@ class CustomModel(
 	override fun toString(): String = super.toString().replace("Model","CustomModel")
 }
 
-class CustomModelProvider(config: ModelConfig): ModelProvider<CustomModel>(config) {
+class CustomModelProvider(config: ModelConfig): ModelProvider<CustomModel>() {
+	init {
+		super.initConfig(config)
+	}
+
 	val stateProvider = object : StateProvider<CustomState,CustomWidget>(){
 		override fun init(widgets: Collection<CustomWidget>, isHomeScreen: Boolean): CustomState = CustomState(widgets, isHomeScreen)
 		override suspend fun getStates(): Collection<CustomState> = states.getAll()

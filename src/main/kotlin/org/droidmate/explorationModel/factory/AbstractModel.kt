@@ -45,12 +45,12 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 	val emptyState get() = stateProvider.empty()
 	val emptyWidget get() = widgetProvider.empty()
 
-	protected val paths = LinkedList<ExplorationTrace>()
+	protected val paths = LinkedList<ExplorationTrace<S,W>>()
 	/** non-mutable view of all traces contained within this model */
-	fun getPaths(): List<ExplorationTrace> = paths
+	fun getPaths(): List<ExplorationTrace<S,W>> = paths
 
 	/**---------------------------------- public interface --------------------------------------------------------------**/
-	open fun initNewTrace(watcher: MutableList<ModelFeatureI>, id: UUID = UUID.randomUUID()): ExplorationTrace {
+	open fun initNewTrace(watcher: MutableList<ModelFeatureI>, id: UUID = UUID.randomUUID()): ExplorationTrace<S,W> {
 		return ExplorationTrace(watcher, config, id, stateProvider.empty()).also { actionTrace ->
 			paths.add(actionTrace)
 		}
@@ -68,7 +68,7 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 
 	private var uTime: Long = 0
 	/** update the model with any [action] executed as part of an execution [trace] **/
-	fun updateModel(action: ActionResult, trace: ExplorationTrace) {
+	fun updateModel(action: ActionResult, trace: ExplorationTrace<S,W>) {
 		measureTimeMillis {
 			storeScreenShot(action)
 			val widgets = generateWidgets(action, trace).also{ incWidgetCounter(it.size) }
@@ -129,7 +129,7 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 	protected open fun createWidget(properties: UiElementPropertiesI, parent: ConcreteId?): W =
 		widgetProvider.create(properties, parent)
 
-	private fun generateWidgets(action: ActionResult, @Suppress("UNUSED_PARAMETER") trace: ExplorationTrace): Collection<W>{
+	private fun generateWidgets(action: ActionResult, @Suppress("UNUSED_PARAMETER") trace: ExplorationTrace<S,W>): Collection<W>{
 		val elements: Map<Int, UiElementPropertiesI> = action.guiSnapshot.widgets.associateBy { it.idHash }
 		return generateWidgets(elements)
 	}

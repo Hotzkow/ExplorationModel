@@ -21,14 +21,29 @@ package org.droidmate.explorationModel.factory
 import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.interaction.State
 import org.droidmate.explorationModel.interaction.Widget
+import java.lang.RuntimeException
 
-abstract class ModelProvider<T: AbstractModel<*,*>>(val config: ModelConfig){
+abstract class ModelProvider<out T: AbstractModel<*,*>> {
 	private var model: T? = null
+	private var models = ArrayList<T>()
+	lateinit var config: ModelConfig
 
+	/** the config has to be initialized before the [get] method can be called successfully, calling this method will also reset the local 'model' variable */
+	fun initConfig(cfg: ModelConfig){
+		config = cfg
+		model = null
+	}
 	protected abstract fun init(config: ModelConfig): T
 
-	fun get() = model ?: init(config).also { model = it }
+	fun get() = model ?:
+	if(!::config.isInitialized)
+		throw RuntimeException("the ModelConfig has to be initialized by calling 'initConfig' before the model can be initialized in get()")
+	else init(config).also { model = it; models.add(it) }
+
+	fun getAll(): List<T> = models
 }
+
+typealias Model = AbstractModel<State<Widget>,Widget>
 
 class DefaultModel<S,W>(override val config: ModelConfig,
                              override val stateProvider: StateFactory<S, W>,
@@ -36,7 +51,7 @@ class DefaultModel<S,W>(override val config: ModelConfig,
 	: AbstractModel<S,W>()
 		where S: State<W>, W: Widget
 
-class DefaultModelProvider(config: ModelConfig): ModelProvider<DefaultModel<State<Widget>,Widget>>(config){
+class DefaultModelProvider: ModelProvider<DefaultModel<State<Widget>,Widget>>(){
 	override fun init(config: ModelConfig): DefaultModel<State<Widget>, Widget>
 			= DefaultModel(config,DefaultStateProvider(),DefaultWidgetProvider())
 }

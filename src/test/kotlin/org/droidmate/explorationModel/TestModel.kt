@@ -15,7 +15,7 @@ internal interface TestModel{
 	val testWidgetDumpString: String
 }
 
-typealias TestAction = Interaction
+typealias TestAction = Interaction<Widget>
 @JvmOverloads fun createTestAction(targetWidget: Widget?=null, oldState: ConcreteId = emptyId,
                                    nextState: ConcreteId = emptyId, actionType:String = "TEST_ACTION",
                                    data: String = ""): TestAction

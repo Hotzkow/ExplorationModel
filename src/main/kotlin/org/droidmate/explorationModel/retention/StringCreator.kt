@@ -90,7 +90,7 @@ object StringCreator {
 								val v = p.property.call(o)
 								val parsed = p.parseValue(listOf(s), mapOf(p to 0)).getValue()
 								val validString =
-										if (p.property.name == Interaction::targetWidget.name) ((v as? Widget)?.id == parsed)
+										if (p.property.name == Interaction<*>::targetWidget.name) ((v as? Widget)?.id == parsed)
 										else v == parsed
 								assert(validString) { "ERROR generated string cannot be parsed to the correct value ${p.property.name}: has value $v but parsed value is $parsed" }
 							}
@@ -101,7 +101,7 @@ object StringCreator {
 			annotatedProperties.processProperty(w){
 				it.joinToString(sep) { (_,valueString) -> valueString }
 			}
-	fun createActionString(a: Interaction, sep: String): String =
+	fun createActionString(a: Interaction<*>, sep: String): String =
 			actionProperties.processProperty(a){
 				it.joinToString(sep) { (_,valueString) -> valueString }
 			}
@@ -117,18 +117,18 @@ object StringCreator {
 	= UiElementP(	baseAnnotations.parsePropertyString(values,indexMap) )
 
 	fun parseActionPropertyString(values: List<String>, target: Widget?,
-	                                       indexMap: Map<AnnotatedProperty<Interaction>, Int> = defaultActionMap): Interaction
+	                                       indexMap: Map<AnnotatedProperty<Interaction<Widget>>, Int> = defaultActionMap): Interaction<Widget>
 			= with(actionProperties.parsePropertyString(values,indexMap)){
 		Interaction( targetWidget = target,
-				actionType = get(Interaction::actionType.name) as String,
-				startTimestamp = get(Interaction::startTimestamp.name) as LocalDateTime,
-				endTimestamp = get(Interaction::endTimestamp.name) as LocalDateTime,
-				successful = get(Interaction::successful.name) as Boolean,
-				exception = get(Interaction::exception.name) as String,
-				prevState = get(Interaction::prevState.name) as ConcreteId,
-				resState = get(Interaction::resState.name) as ConcreteId,
-				data = get(Interaction::data.name) as String,
-				actionId = get(Interaction::actionId.name) as Int
+				actionType = get(Interaction<*>::actionType.name) as String,
+				startTimestamp = get(Interaction<*>::startTimestamp.name) as LocalDateTime,
+				endTimestamp = get(Interaction<*>::endTimestamp.name) as LocalDateTime,
+				successful = get(Interaction<*>::successful.name) as Boolean,
+				exception = get(Interaction<*>::exception.name) as String,
+				prevState = get(Interaction<*>::prevState.name) as ConcreteId,
+				resState = get(Interaction<*>::resState.name) as ConcreteId,
+				data = get(Interaction<*>::data.name) as String,
+				actionId = get(Interaction<*>::actionId.name) as Int
 		)}
 
 	internal val baseAnnotations: Sequence<WidgetProperty> by lazy {
@@ -138,7 +138,7 @@ object StringCreator {
 	}
 
 	@JvmStatic
-	val actionProperties: Sequence<AnnotatedProperty<Interaction>> by lazy{
+	val actionProperties: Sequence<AnnotatedProperty<Interaction<*>>> by lazy{
 		Interaction::class.declaredMemberProperties.mapNotNull { property ->
 			property.findAnnotation<Persistent>()?.let{ annotation -> AnnotatedProperty(property,annotation) }
 		}.sortedBy { (_,annotation) -> annotation.ordinal }.asSequence()
@@ -189,7 +189,7 @@ object StringCreator {
 		println("-------- create widget property")
 		val wp = parseWidgetPropertyString(s.split(sep),vMap)
 		println(wp)
-		val w = DefaultModelProvider(ModelConfig("someApp")).get().generateWidgets(mapOf(wp.idHash to wp))
+		val w = DefaultModelProvider().apply { initConfig(ModelConfig("someApp")) }.get().generateWidgets(mapOf(wp.idHash to wp))
 		println(createPropertyString(w.first(),sep))
 	}
 

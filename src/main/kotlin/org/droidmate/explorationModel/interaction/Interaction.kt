@@ -34,9 +34,9 @@ typealias DeviceLogs = List<DeviceLog>
  * @actionId used to map this interaction to the coresponding result screenshot, which is named according to this value
  * @meta do not rely on this parameter as it may be removed or the content changed at any time, it is intended for debugging purposes only
  */
-open class Interaction (
+open class Interaction<out W: Widget> (
 		@property:Persistent("Action", 1) val actionType: String,
-		@property:Persistent("Interacted Widget", 2, PType.ConcreteId) val targetWidget: Widget?,
+		@property:Persistent("Interacted Widget", 2, PType.ConcreteId) val targetWidget: W?,
 		@property:Persistent("StartTime", 4, PType.DateTime) val startTimestamp: LocalDateTime,
 		@property:Persistent("EndTime", 5, PType.DateTime) val endTimestamp: LocalDateTime,
 		@property:Persistent("SuccessFul", 6, PType.Boolean) val successful: Boolean,
@@ -48,14 +48,14 @@ open class Interaction (
 		val deviceLogs: DeviceLogs = emptyList(),
 		@Suppress("unused") val meta: String = "") {
 
-	constructor(res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: Widget?)
+	constructor(res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: W?)
 			: this(actionType = res.action.name, targetWidget = target,
 			startTimestamp = res.startTimestamp, endTimestamp = res.endTimestamp, successful = res.successful,
 			exception = res.exception, prevState = prevStateId, resState = resStateId, data = computeData(res.action),
 			deviceLogs = res.deviceLogs,	meta = res.action.id.toString(), actionId = res.action.id)
 
 	/** used for ActionQueue entries */
-	constructor(action: ExplorationAction, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: Widget?)
+	constructor(action: ExplorationAction, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: W?)
 			: this(action.name, target, res.startTimestamp,
 			res.endTimestamp, successful = res.successful, exception = res.exception, prevState = prevStateId,
 			resState = resStateId, data = computeData(action), deviceLogs = res.deviceLogs, actionId = action.id)
@@ -67,24 +67,23 @@ open class Interaction (
 			resState = resStateId, deviceLogs = res.deviceLogs, actionId = res.action.id)
 
 	/** used for parsing from string */
-	constructor(actionType: String, target: Widget?, startTimestamp: LocalDateTime, endTimestamp: LocalDateTime,
+	constructor(actionType: String, target: W?, startTimestamp: LocalDateTime, endTimestamp: LocalDateTime,
 	            successful: Boolean, exception: String, resState: ConcreteId, prevState: ConcreteId, data: String = "", actionId: Int)
 			: this(actionType = actionType, targetWidget = target, startTimestamp = startTimestamp, endTimestamp = endTimestamp,
 			successful = successful, exception = exception, prevState = prevState, resState = resState, data = data, actionId = actionId)
 
 
 	/**
-	 * Time the strategy pool took to select a strategy and a create an action
 	 * (used to measure overhead for new exploration strategies)
 	 */
 	val decisionTime: Long by lazy { ChronoUnit.MILLIS.between(startTimestamp, endTimestamp) }
 
 	companion object {
 
-		@JvmStatic val actionTypeIdx = StringCreator.actionProperties.indexOfFirst { it.property == Interaction::actionType }
-		@JvmStatic val widgetIdx = StringCreator.actionProperties.indexOfFirst { it.property == Interaction::targetWidget }
-		@JvmStatic val resStateIdx = StringCreator.actionProperties.indexOfFirst { it.property == Interaction::resState }
-		@JvmStatic val srcStateIdx = StringCreator.actionProperties.indexOfFirst { it.property == Interaction::prevState }
+		@JvmStatic val actionTypeIdx = StringCreator.actionProperties.indexOfFirst { it.property == Interaction<*>::actionType }
+		@JvmStatic val widgetIdx = StringCreator.actionProperties.indexOfFirst { it.property == Interaction<*>::targetWidget }
+		@JvmStatic val resStateIdx = StringCreator.actionProperties.indexOfFirst { it.property == Interaction<*>::resState }
+		@JvmStatic val srcStateIdx = StringCreator.actionProperties.indexOfFirst { it.property == Interaction<*>::prevState }
 
 		@JvmStatic
 		fun computeData(e: ExplorationAction):String = when(e){
@@ -95,10 +94,9 @@ open class Interaction (
 		}
 
 		@JvmStatic
-		val empty: Interaction by lazy {
-			Interaction("EMPTY", null, LocalDateTime.MIN, LocalDateTime.MIN, true,
+		fun<T: Widget> empty() =
+			Interaction<T>("EMPTY", null, LocalDateTime.MIN, LocalDateTime.MIN, true,
 					"root action", emptyId, prevState = emptyId, actionId = -1)
-		}
 
 	}
 
@@ -108,7 +106,7 @@ open class Interaction (
 	}
 
 	@Suppress("unused")
-	fun copy(prevState: ConcreteId, resState: ConcreteId): Interaction
+	fun copy(prevState: ConcreteId, resState: ConcreteId): Interaction<W>
 		= Interaction(actionType = actionType, targetWidget = targetWidget, startTimestamp = startTimestamp,
 			endTimestamp = endTimestamp, successful = successful, exception = exception,
 			prevState = prevState, resState = resState, data = data, deviceLogs = deviceLogs, meta = meta, actionId = actionId)

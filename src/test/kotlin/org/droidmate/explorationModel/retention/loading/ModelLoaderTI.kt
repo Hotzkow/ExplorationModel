@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.produce
 import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
 import org.droidmate.explorationModel.ConcreteId
 import org.droidmate.explorationModel.ModelFeatureI
+import org.droidmate.explorationModel.TestAction
 import org.droidmate.explorationModel.config.ConfigProperties
 import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.factory.AbstractModel
@@ -23,22 +24,22 @@ import java.util.*
 /** test interface for the model loader, which cannot be done with mockito due to coroutine incompatibility */
 internal interface ModelLoaderTI{
 	val sep: String
-	var testTraces: List<Collection<Interaction>>
+	var testTraces: List<Collection<TestAction>>
 	var testStates: Collection<State<Widget>>
 	val modelProvider: ModelProvider<DefaultModel<State<Widget>, Widget>>
 
-	fun execute(testTraces: List<Collection<Interaction>>, testStates: Collection<State<Widget>>, watcher: LinkedList<ModelFeatureI> = LinkedList()): AbstractModel<State<Widget>,Widget>
+	fun execute(testTraces: List<Collection<TestAction>>, testStates: Collection<State<Widget>>, watcher: LinkedList<ModelFeatureI> = LinkedList()): AbstractModel<State<Widget>,Widget>
 	suspend fun parseWidget(widget: Widget): UiElementPropertiesI?
 
 	/** REMARK these are state dependent => use very carefully in Unit-Tests */
-	val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State<Widget>>
+	val actionParser: suspend (List<String>,CoroutineScope) -> Pair<TestAction, State<Widget>>
 	suspend fun parseState(stateId: ConcreteId): State<Widget>
 
 }
 
 class TestReader(config: ModelConfig): ContentReader(config){
 	lateinit var testStates: Collection<State<Widget>>
-	lateinit var testTraces: List<Collection<Interaction>>
+	lateinit var testTraces: List<Collection<TestAction>>
 	private val traceContents: (idx: Int) -> List<String> = { idx ->
 		testTraces[idx].map { actionData -> 	StringCreator.createActionString(actionData, ";").also { log(it) } } }
 
@@ -75,7 +76,7 @@ class TestReader(config: ModelConfig): ContentReader(config){
 }
 
 @ExperimentalCoroutinesApi
-internal class ModelLoaderT(override val config: ModelConfig): ModelParserP<DefaultModel<State<Widget>, Widget>>(config, enableChecks = true, modelProvider = DefaultModelProvider(config)), ModelLoaderTI {
+internal class ModelLoaderT(override val config: ModelConfig): ModelParserP<DefaultModel<State<Widget>, Widget>>(config, enableChecks = true, modelProvider = DefaultModelProvider().apply { initConfig(config) }), ModelLoaderTI {
 	override val sep: String= config[ConfigProperties.ModelProperties.dump.sep]
 
 	/** creating test environment */
@@ -92,11 +93,11 @@ internal class ModelLoaderT(override val config: ModelConfig): ModelParserP<Defa
 
 	/** custom test environment */
 //	override val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State> = processor
-	override val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State<Widget>> = { args,scope -> processor(args,scope).await() }
+	override val actionParser: suspend (List<String>,CoroutineScope) -> Pair<TestAction, State<Widget>> = { args,scope -> processor(args,scope).await() }
 	override var testStates: Collection<State<Widget>>
 		get() = reader.testStates
 		set(value) { reader.testStates = value}
-	override var testTraces: List<Collection<Interaction>>
+	override var testTraces: List<Collection<TestAction>>
 		get() = reader.testTraces
 		set(value) { reader.testTraces = value}
 
@@ -109,7 +110,7 @@ internal class ModelLoaderT(override val config: ModelConfig): ModelParserP<Defa
 		}
 	}
 
-	override fun execute(testTraces: List<Collection<Interaction>>, testStates: Collection<State<Widget>>, watcher: LinkedList<ModelFeatureI>): AbstractModel<State<Widget>,Widget> {
+	override fun execute(testTraces: List<Collection<TestAction>>, testStates: Collection<State<Widget>>, watcher: LinkedList<ModelFeatureI>): AbstractModel<State<Widget>,Widget> {
 //		logcat(testActions.)
 		this.testTraces = testTraces
 		this.testStates = testStates
