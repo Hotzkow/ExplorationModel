@@ -41,6 +41,10 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 	abstract val config: ModelConfig
 	val logger: Logger by lazy { LoggerFactory.getLogger(this::class.java) }
 
+	/** dummy element if a state has to be given but no widget data is available */
+	val emptyState get() = stateProvider.empty()
+	val emptyWidget get() = widgetProvider.empty()
+
 	protected val paths = LinkedList<ExplorationTrace>()
 	/** non-mutable view of all traces contained within this model */
 	fun getPaths(): List<ExplorationTrace> = paths
@@ -176,7 +180,7 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 	 * times the real set will contain less elements then these counter indicate
 	 */
 	override fun toString(): String {
-		return "DefaultModel[#addState=$nStates, #addWidget=$nWidgets, paths=${paths.size}]"
+		return "Model[#addState=$nStates, #addWidget=$nWidgets, paths=${paths.size}]"
 	}
 
 }

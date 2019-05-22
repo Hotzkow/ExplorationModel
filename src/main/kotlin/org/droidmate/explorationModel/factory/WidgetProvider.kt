@@ -29,13 +29,18 @@ interface WidgetFactory<T>: Factory<T,Pair<UiElementPropertiesI, ConcreteId?>>{
 	fun create(properties: UiElementPropertiesI, parentId: ConcreteId?) = create(Pair(properties,parentId))
 }
 
-abstract class WidgetProvider<T: Widget>(val init: (Pair<UiElementPropertiesI,ConcreteId?>)->T): WidgetFactory<T> {
+abstract class WidgetProvider<T: Widget>: WidgetFactory<T> {
 	override var mocked: T? = null
 	protected var emptyWidget: T? = null
 
+	protected abstract fun init(properties: UiElementPropertiesI,parentId: ConcreteId?):T
+	protected fun init(args: Pair<UiElementPropertiesI,ConcreteId?>) = init(args.first,args.second)
+
 	// if memory becomes an issue we could use a 'common' set of widgets based on ConcreteId and take the element out of this set if it already exists and only call init otherwise
 	override fun create(arg: Pair<UiElementPropertiesI,ConcreteId?>): T = mocked ?: init(arg)
-	override fun empty(): T = emptyWidget ?: init(Pair(DummyProperties,null)).also { emptyWidget = it }
+	override fun empty(): T = emptyWidget ?: init(DummyProperties,null).also { emptyWidget = it }
 }
 
-open class DefaultWidgetProvider: WidgetProvider<Widget>({(properties,parentId) -> Widget(properties,parentId)})
+open class DefaultWidgetProvider: WidgetProvider<Widget>(){
+	override fun init(properties: UiElementPropertiesI, parentId: ConcreteId?): Widget = Widget(properties,parentId)
+}

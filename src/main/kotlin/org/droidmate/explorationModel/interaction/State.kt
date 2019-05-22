@@ -35,7 +35,7 @@ import java.util.*
  * You should avoid creating instances of State directly and instead use the model to generate states
  * in order to avoid incompatibilities with extension classes of State.
  * */
-open class State<W: Widget> (_widgets: Collection<W>, val isHomeScreen: Boolean = false) {
+open class State<out W: Widget> (_widgets: Collection<W>, val isHomeScreen: Boolean = false) {
 
 	val stateId by lazy {
 		ConcreteId(uid, configId)

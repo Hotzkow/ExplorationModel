@@ -37,9 +37,10 @@ interface StateFactory<S, W>: Factory<S, Pair<Collection<W>, Boolean>> where S: 
 	suspend fun addState(e: S)
 }
 
-abstract class AbstractStateProvider<T,W> : StateFactory<T,W> where T: State<W>, W: Widget {
+abstract class StateProvider<T,W> : StateFactory<T,W> where T: State<W>, W: Widget {
 	override var mocked: T? = null
-	abstract val init: (Pair<Collection<W>,Boolean>)->T
+	protected abstract fun init(widgets:Collection<W>, isHomeScreen: Boolean): T
+	private fun init(args:Pair<Collection<W>,Boolean>): T = init(args.first,args.second)
 	override fun create(arg: Pair<Collection<W>,Boolean>): T = mocked ?: init(arg)
 
 	override var numStates: Int = 0
@@ -54,8 +55,7 @@ abstract class AbstractStateProvider<T,W> : StateFactory<T,W> where T: State<W>,
 	}
 }
 
-open class DefaultStateProvider(override val init: (Pair<Collection<Widget>, Boolean>) -> State<Widget> =
-	                                { (widgets,isHome) -> State(widgets,isHome) }): AbstractStateProvider<State<Widget>,Widget>() {
-
+open class DefaultStateProvider: StateProvider<State<Widget>,Widget>() {
+	override fun init(widgets: Collection<Widget>, isHomeScreen: Boolean): State<Widget> = State(widgets,isHomeScreen)
 	override suspend fun getStates(): Collection<State<Widget>> = states.getAll()
 }

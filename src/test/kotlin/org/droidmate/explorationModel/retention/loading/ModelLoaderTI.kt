@@ -1,6 +1,5 @@
 package org.droidmate.explorationModel.retention.loading
 
-import com.sun.management.jmx.Trace.send
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.produce
 import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
@@ -9,12 +8,13 @@ import org.droidmate.explorationModel.ModelFeatureI
 import org.droidmate.explorationModel.config.ConfigProperties
 import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.factory.AbstractModel
+import org.droidmate.explorationModel.factory.DefaultModel
 import org.droidmate.explorationModel.factory.DefaultModelProvider
+import org.droidmate.explorationModel.factory.ModelProvider
 import org.droidmate.explorationModel.interaction.Interaction
 import org.droidmate.explorationModel.interaction.State
 import org.droidmate.explorationModel.interaction.Widget
 import org.droidmate.explorationModel.retention.StringCreator
-import org.droidmate.explorationModel.retention.loading.ModelParser.loadModel
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
@@ -25,6 +25,7 @@ internal interface ModelLoaderTI{
 	val sep: String
 	var testTraces: List<Collection<Interaction>>
 	var testStates: Collection<State<Widget>>
+	val modelProvider: ModelProvider<DefaultModel<State<Widget>, Widget>>
 
 	fun execute(testTraces: List<Collection<Interaction>>, testStates: Collection<State<Widget>>, watcher: LinkedList<ModelFeatureI> = LinkedList()): AbstractModel<State<Widget>,Widget>
 	suspend fun parseWidget(widget: Widget): UiElementPropertiesI?
@@ -74,7 +75,7 @@ class TestReader(config: ModelConfig): ContentReader(config){
 }
 
 @ExperimentalCoroutinesApi
-internal class ModelLoaderT(override val config: ModelConfig): ModelParserP<State<Widget>,Widget>(config, enableChecks = true, modelProvider = DefaultModelProvider(config)), ModelLoaderTI {
+internal class ModelLoaderT(override val config: ModelConfig): ModelParserP<DefaultModel<State<Widget>, Widget>>(config, enableChecks = true, modelProvider = DefaultModelProvider(config)), ModelLoaderTI {
 	override val sep: String= config[ConfigProperties.ModelProperties.dump.sep]
 
 	/** creating test environment */

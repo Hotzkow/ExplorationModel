@@ -12,11 +12,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.junit.runners.MethodSorters
-import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.interaction.*
 import java.util.*
-
-private val config = ModelConfig("JUnit", true)
 
 /** verify the ModelLoader correctly initializes/loads a model by using
  * - mocked model (mock the dump-file nlpText read)
@@ -31,7 +28,7 @@ private val config = ModelConfig("JUnit", true)
 @RunWith(JUnit4::class)
 class ModelLoadTester: TestI, TestModel by DefaultTestModel(), ModelLoaderTI by ModelLoaderT(config) {
 	private val testState = State(setOf(testWidget), isHomeScreen = false)
-	private val states = listOf(testState, emptyState)
+	private val states = listOf(testState, modelProvider.get().emptyState)
 
 	@Test
 	fun widgetParsingTest() = runBlocking{

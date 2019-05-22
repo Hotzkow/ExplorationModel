@@ -5,6 +5,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
 import org.droidmate.explorationModel.*
+import org.droidmate.explorationModel.factory.AbstractModel
 import org.droidmate.explorationModel.factory.ModelProvider
 import org.droidmate.explorationModel.interaction.State
 import org.slf4j.Logger
@@ -18,7 +19,7 @@ import org.droidmate.explorationModel.retention.WidgetProperty
 import org.droidmate.explorationModel.retention.getValue
 import kotlin.collections.HashMap
 
-internal abstract class WidgetParserI<T,S,W>: ParserI<Pair<ConcreteId,T>, UiElementPropertiesI, S, W> where S: State<W>, W: Widget {
+internal abstract class WidgetParserI<T,M: AbstractModel<*,*>>: ParserI<Pair<ConcreteId,T>, UiElementPropertiesI, M> {
 	var indicesComputed: AtomicBoolean = AtomicBoolean(false)
 	/** temporary map of all processed widgets for state parsing */
 	abstract val queue: MutableMap<ConcreteId, T>
@@ -72,8 +73,8 @@ internal abstract class WidgetParserI<T,S,W>: ParserI<Pair<ConcreteId,T>, UiElem
 		 * Optionally a map of oldName->newName can be given to automatically infere renamed header entries
 		 */
 		@JvmStatic fun computeWidgetIndices(header: List<String>, renamed: Map<String,String> = emptyMap()): Map<WidgetProperty, Int>{
-			if(header.size!= StringCreator.annotatedProperties.count()){
-				val missing = StringCreator.annotatedProperties.filter { !header.contains(it.annotation.header) && !renamed.containsValue(it.annotation.header) }
+			if(header.size!= annotatedProperties.count()){
+				val missing = annotatedProperties.filter { !header.contains(it.annotation.header) && !renamed.containsValue(it.annotation.header) }
 				println("WARN the given Widget File does not specify all available properties," +
 						"this may lead to different Widget properties and may require to be parsed in compatibility mode\n missing entries: ${missing.toList()}")
 			}
@@ -90,9 +91,9 @@ internal abstract class WidgetParserI<T,S,W>: ParserI<Pair<ConcreteId,T>, UiElem
 	}
 }
 
-internal class WidgetParserS<S,W>(override val modelProvider: ModelProvider<S, W>,
+internal class WidgetParserS<M: AbstractModel<State<*>,Widget>>(override val modelProvider: ModelProvider<M>,
                              override val compatibilityMode: Boolean = false,
-                             override val enableChecks: Boolean = true): WidgetParserI<UiElementPropertiesI,S,W>() where S: State<W>, W: Widget{
+                             override val enableChecks: Boolean = true): WidgetParserI<UiElementPropertiesI,M>() {
 
 	override fun P_S_process(s: List<String>, id: ConcreteId, scope: CoroutineScope): Pair<ConcreteId,UiElementPropertiesI> = runBlocking{ computeWidget(s,id) }
 
@@ -101,9 +102,9 @@ internal class WidgetParserS<S,W>(override val modelProvider: ModelProvider<S, W
 	override val queue: MutableMap<ConcreteId, UiElementPropertiesI> = HashMap()
 }
 
-internal class WidgetParserP<S,W>(override val modelProvider: ModelProvider<S, W>,
-                             override val compatibilityMode: Boolean = false,
-                             override val enableChecks: Boolean = true): WidgetParserI<Deferred<UiElementPropertiesI>,S,W>() where S: State<W>, W: Widget{
+internal class WidgetParserP<M: AbstractModel<State<*>,Widget>>(override val modelProvider: ModelProvider<M>,
+                                                     override val compatibilityMode: Boolean = false,
+                                                     override val enableChecks: Boolean = true): WidgetParserI<Deferred<UiElementPropertiesI>,M>(){
 
 
 	override fun P_S_process(s: List<String>, id: ConcreteId, scope: CoroutineScope): Pair<ConcreteId,Deferred<UiElementPropertiesI>>

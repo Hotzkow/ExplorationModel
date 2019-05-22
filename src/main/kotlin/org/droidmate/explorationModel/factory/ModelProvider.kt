@@ -22,17 +22,10 @@ import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.interaction.State
 import org.droidmate.explorationModel.interaction.Widget
 
-abstract class ModelProvider<S,W>(val config: ModelConfig)
-		where S: State<W>, W: Widget {
-	private var model: AbstractModel<S,W>? = null
+abstract class ModelProvider<T: AbstractModel<*,*>>(val config: ModelConfig){
+	private var model: T? = null
 
-	abstract fun init(config: ModelConfig): AbstractModel<S,W>
-
-	abstract val stateProvider: StateFactory<S,W>
-	abstract val widgetProvider: WidgetFactory<W>
-	/** dummy element if a state has to be given but no widget data is available */
-	val emptyState get() = stateProvider.empty()
-	val emptyWidget get() = widgetProvider.empty()
+	protected abstract fun init(config: ModelConfig): T
 
 	fun get() = model ?: init(config).also { model = it }
 }
@@ -43,9 +36,7 @@ class DefaultModel<S,W>(override val config: ModelConfig,
 	: AbstractModel<S,W>()
 		where S: State<W>, W: Widget
 
-class DefaultModelProvider(config: ModelConfig): ModelProvider<State<Widget>,Widget>(config){
-	override val stateProvider: StateFactory<State<Widget>, Widget> = DefaultStateProvider()
-	override val widgetProvider: WidgetFactory<Widget> = DefaultWidgetProvider()
-
-	override fun init(config: ModelConfig): AbstractModel<State<Widget>, Widget> = DefaultModel(config,stateProvider,widgetProvider)
+class DefaultModelProvider(config: ModelConfig): ModelProvider<DefaultModel<State<Widget>,Widget>>(config){
+	override fun init(config: ModelConfig): DefaultModel<State<Widget>, Widget>
+			= DefaultModel(config,DefaultStateProvider(),DefaultWidgetProvider())
 }
