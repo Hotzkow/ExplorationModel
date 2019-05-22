@@ -59,7 +59,7 @@ data class AnnotatedProperty<R>(val property: KProperty1<out R, *>, val annotati
 			PType.Boolean -> s?.toBoolean() ?: false
 			PType.Rectangle -> s?.parseRectangle() ?: Rectangle.empty()
 			PType.RectangleList -> s?.getListElements()?.map { it.parseRectangle() } ?: emptyList<Rectangle>() // create the list of rectangles
-			PType.String -> s?: "NOT PERSISTED"
+			PType.String -> s?.replace("<newline>", "\n")?.replace("<semicolon>",";") ?: "NOT PERSISTED"
 			PType.IntList -> s?.getListElements()?.map { it.trim().toInt() } ?: emptyList<Int>()
 			PType.ConcreteId -> if(s == null) emptyId else ConcreteId.fromString(s)
 			PType.DateTime -> LocalDateTime.parse(s)
@@ -77,13 +77,14 @@ object StringCreator {
 			when{
 				t == PType.DeactivatableFlag -> pv?.toString() ?: "disabled"
 				t == PType.ConcreteId && pv is Widget? -> pv?.id.toString() // necessary for [Interaction.targetWidget]
+				t == PType.String -> pv!!.toString().replaceNewLine().replace(";","<semicolon>")
 				else -> pv.toString()
 			}
 
 	private inline fun<reified T,reified R> Sequence<AnnotatedProperty<T>>.processProperty(o: T, crossinline body:(Sequence<Pair<AnnotatedProperty<T>, String>>)->R): R =
 			body(this.map { p:AnnotatedProperty<T> ->
 				//			val annotation: Persistent = annotatedProperty.annotations.find { it is Persistent } as Persistent
-				Pair(p,StringCreator.createPropertyString(p.annotation.type,p.property.call(o)))  // determine the actual values to be stored and transform them into string format
+				Pair(p, createPropertyString(p.annotation.type,p.property.call(o)))  // determine the actual values to be stored and transform them into string format
 						.also{ (p,s) ->
 							if(debugParsing) {
 								val v = p.property.call(o)

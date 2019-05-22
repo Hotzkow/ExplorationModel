@@ -32,8 +32,9 @@ import org.droidmate.explorationModel.retention.StringCreator
 import java.util.*
 import kotlin.collections.HashMap
 
+@Suppress("unused")
 open class Widget constructor(properties: UiElementPropertiesI,
-                                       val parentId: ConcreteId?): UiElementPropertiesI {
+                              val parentId: ConcreteId?): UiElementPropertiesI {
 
 	override val metaInfo: List<String> = properties.metaInfo
 
@@ -68,8 +69,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	/**------------------------------- open function default implementations ------------------------------------------**/
 
 	open val nlpText: String by lazy {
-		"$hintText $text $contentDesc".replace("<newline>", " ").replace("\\s+", " ").splitOnCaseSwitch().split(" ").distinct().filter { it.isNotBlank() }
-			.joinToString(separator = " ") { it.trim() }  // erase redundant spaces
+		"$hintText $text $contentDesc".sanitize()
 	}
 
 	open fun isLeaf(): Boolean = childHashes.isEmpty()
@@ -86,9 +86,9 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	/** compute the widget.uid based on its visible natural language content/resourceId if it exists, or based on [uidString] otherwise */
 	protected open fun computeUId():UUID =	when {
 		!isKeyboard && isInputField -> when { 	// special care for EditText elements, as the input text will change the [text] property
-			hintText.isNotBlank() -> hintText.toUUID()
-			contentDesc.isNotBlank() -> contentDesc.toUUID()
-			resourceId.isNotBlank() -> resourceId.toUUID()
+			hintText.isNotBlank() -> hintText.sanitize().toUUID()
+			contentDesc.isNotBlank() -> contentDesc.sanitize().toUUID()
+			resourceId.isNotBlank() -> resourceId.replaceNewLine().toUUID()
 			else -> uidString.toUUID()
 		}
 		!isKeyboard && nlpText.isNotBlank() -> { // compute id from textual nlpText if there is any
@@ -115,22 +115,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 
 	companion object {
 		/** used for dummy initializations, if nullable is undesirable */
-		val emptyWidget by lazy{ Widget(DummyProperties,null) }
-
-		/**------------------------------------------ private methods ---------------------------------------------------**/
-		fun String.splitOnCaseSwitch(): String{
-			if(this.isBlank()) return ""
-			var newString = ""
-			this.forEachIndexed { i, c ->
-				newString += when{
-					c.isWhitespace() || c=='_' || c=='/' || c=='.' || c=='-' || c==',' -> " "
-					!c.isLetter() -> ""
-					c.isUpperCase() && i>0 && this[i-1].isLowerCase() -> " $c"
-					else -> c
-				}
-			}
-			return newString
-		}
+		internal val emptyWidget by lazy{ Widget(DummyProperties,null) }
 	}
 
 	/*** overwritten functions ***/

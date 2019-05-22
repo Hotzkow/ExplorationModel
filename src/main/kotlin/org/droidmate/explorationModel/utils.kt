@@ -61,6 +61,32 @@ fun String.asUUID(): UUID? = if(this == "null") null else UUID.fromString(this)
 //fun ConcreteId.dumpString() = "${first}_$second"
 val emptyId = ConcreteId(emptyUUID, emptyUUID)
 
+/** string sanitation functions */
+fun String.removeNewLineAndSemicolon() = replace(Regex("\\r\\n|\\r|\\n")," ").replace(";"," ")
+
+fun String.sanitize(): String =
+	removeNewLineAndSemicolon()
+		.replace("<newline>", " ").replace("<semicolon>"," ")
+		.replace("\\s+", " ").splitOnCaseSwitch().split(" ").distinct().filter { it.isNotBlank() }
+		.joinToString(separator = " ") { it.trim() }  // erase redundant spaces
+
+fun String.splitOnCaseSwitch(): String{
+	if(this.isBlank()) return ""
+	var newString = ""
+	this.forEachIndexed { i, c ->
+		newString += when{
+			c.isWhitespace() || c=='_' || c=='/' || c=='.' || c=='-' || c==',' -> " "
+			!c.isLetter() -> ""
+			c.isUpperCase() && i>0 && this[i-1].isLowerCase() -> " $c"
+			else -> c
+		}
+	}
+	return newString
+}
+
+fun String.replaceNewLine() = replace(Regex("\\r\\n|\\r|\\n"),"<newline>")
+
+
 private const val datePattern = "ddMM-HHmmss"
 internal fun timestamp(): String = DateTimeFormatter.ofPattern(datePattern).format(LocalDateTime.now())
 
