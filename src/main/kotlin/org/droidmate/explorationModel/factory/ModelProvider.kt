@@ -25,22 +25,20 @@ import java.lang.RuntimeException
 
 abstract class ModelProvider<out T: AbstractModel<*,*>> {
 	private var model: T? = null
-	private var models = ArrayList<T>()
 	lateinit var config: ModelConfig
 
 	/** the config has to be initialized before the [get] method can be called successfully, calling this method will also reset the local 'model' variable */
-	fun initConfig(cfg: ModelConfig){
+	fun init(cfg: ModelConfig){
 		config = cfg
 		model = null
 	}
-	protected abstract fun init(config: ModelConfig): T
+	protected abstract fun create(config: ModelConfig): T
 
 	fun get() = model ?:
 	if(!::config.isInitialized)
-		throw RuntimeException("the ModelConfig has to be initialized by calling 'initConfig' before the model can be initialized in get()")
-	else init(config).also { model = it; models.add(it) }
+		throw RuntimeException("the ModelConfig has to be initialized by calling 'init' before the model can be initialized in get()")
+	else create(config).also { model = it }
 
-	fun getAll(): List<T> = models
 }
 
 typealias Model = AbstractModel<State<Widget>,Widget>
@@ -52,6 +50,6 @@ class DefaultModel<S,W>(override val config: ModelConfig,
 		where S: State<W>, W: Widget
 
 class DefaultModelProvider: ModelProvider<DefaultModel<State<Widget>,Widget>>(){
-	override fun init(config: ModelConfig): DefaultModel<State<Widget>, Widget>
+	override fun create(config: ModelConfig): DefaultModel<State<Widget>, Widget>
 			= DefaultModel(config,DefaultStateProvider(),DefaultWidgetProvider())
 }

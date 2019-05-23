@@ -189,7 +189,7 @@ object StringCreator {
 		println("-------- create widget property")
 		val wp = parseWidgetPropertyString(s.split(sep),vMap)
 		println(wp)
-		val w = DefaultModelProvider().apply { initConfig(ModelConfig("someApp")) }.get().generateWidgets(mapOf(wp.idHash to wp))
+		val w = DefaultModelProvider().apply { init(ModelConfig("someApp")) }.get().generateWidgets(mapOf(wp.idHash to wp))
 		println(createPropertyString(w.first(),sep))
 	}
 

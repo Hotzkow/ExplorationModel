@@ -36,20 +36,33 @@ import kotlin.system.measureTimeMillis
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
-	abstract val stateProvider: StateFactory<S,W>
-	abstract val widgetProvider: WidgetFactory<W>
 	abstract val config: ModelConfig
-	val logger: Logger by lazy { LoggerFactory.getLogger(this::class.java) }
+
+	protected abstract val stateProvider: StateFactory<S,W>
+	protected abstract val widgetProvider: WidgetFactory<W>
+	protected val logger: Logger by lazy { LoggerFactory.getLogger(this::class.java) }
+	protected val paths = ArrayList<ExplorationTrace<S,W>>()
 
 	/** dummy element if a state has to be given but no widget data is available */
 	val emptyState get() = stateProvider.empty()
 	val emptyWidget get() = widgetProvider.empty()
 
-	protected val paths = LinkedList<ExplorationTrace<S,W>>()
+	/**---------------------------------- public interface --------------------------------------------------------------**/
 	/** non-mutable view of all traces contained within this model */
 	fun getPaths(): List<ExplorationTrace<S,W>> = paths
 
-	/**---------------------------------- public interface --------------------------------------------------------------**/
+	/** @return a view to the data (suspending function) */
+	suspend fun getStates() = stateProvider.getStates()
+
+	/** adding a value to the actor is non blocking and should not take much time */
+	/** should be used only by model loader/parser */
+	internal suspend fun addState(s: S) = stateProvider.addState(s)
+
+	suspend fun getState(id: ConcreteId) = stateProvider.getState(id)
+
+	suspend fun getWidgets(): Collection<W> = getStates().flatMap { it.widgets }
+
+	/** create a new empty trace with given [id] (or random id if none is provided), and add it to this model */
 	open fun initNewTrace(watcher: MutableList<ModelFeatureI>, id: UUID = UUID.randomUUID()): ExplorationTrace<S,W> {
 		return ExplorationTrace(watcher, config, id, stateProvider.empty()).also { actionTrace ->
 			paths.add(actionTrace)
@@ -58,9 +71,9 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 
 	// we use supervisorScope for the dumping, such that cancellation and exceptions are only propagated downwards
 	// meaning if a dump process fails the overall model process is not affected
-	open fun dumpModel(config: ModelConfig): Job = this.launch(CoroutineName("DefaultModel-dump") +backgroundJob){
+	open fun dumpModel(config: ModelConfig): Job = this.launch(CoroutineName("Model-dump") +backgroundJob){
 		getStates().let { states ->
-			debugOut("dump DefaultModel with ${states.size}")
+			logger.trace("dump Model with ${states.size}")
 			states.forEach { s: State<*> -> launch(CoroutineName("state-dump ${s.uid}")) { s.dump(config) } }
 		}
 		paths.forEach { t -> launch(CoroutineName("trace-dump")) { t.dump(config) } }
@@ -72,11 +85,11 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 		measureTimeMillis {
 			storeScreenShot(action)
 			val widgets = generateWidgets(action, trace).also{ incWidgetCounter(it.size) }
-			val newState = generateState(action, widgets).also{ launch{ addState(it) } }
+			val newState = createState(widgets, action.guiSnapshot.isHomeScreen).also{ launch{ addState(it) } }
 			trace.update(action, newState)
 
 			if (config[ConfigProperties.ModelProperties.dump.onEachAction]) {
-				this.launch(CoroutineName("state-dump")) { newState.dump(config) }   //TODO the launch may be on state/trace object instead
+				this.launch(CoroutineName("state-dump")) { newState.dump(config) }
 				this.launch(CoroutineName("trace-dump")) { trace.dump(config) }
 			}
 		}.let {
@@ -100,33 +113,28 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 	 */
 	suspend fun cancelAndJoin() = coroutineContext[Job]!!.cancelAndJoin()
 
-	/** @return a view to the data (suspending function) */
-	suspend fun getStates() = stateProvider.getStates()
-
-	/** adding a value to the actor is non blocking and should not take much time */
-	/** should be used only by model loader/parser */
-	internal suspend fun addState(s: S) = stateProvider.addState(s)
-
-	suspend fun getState(id: ConcreteId) = stateProvider.getState(id)
-
-	suspend fun getWidgets(): Collection<W> = getStates().flatMap { it.widgets }
-
-	internal fun incWidgetCounter(num: Int) {
-		nWidgets += num
-	}
-
 	/** -------------------------------------- protected generator methods --------------------------------------------**/
 
 	/** used on model update to instantiate a new state for the current UI screen */
+	@Deprecated("This function no longer needs to be overwritten and will be removed. " +
+			"Provide a custom StateProvider instead", ReplaceWith("createState(widgets, isHomeScreen)"))
 	protected open fun generateState(action: ActionResult, widgets: Collection<W>): S =
 		with(action.guiSnapshot) { stateProvider.create(widgets, isHomeScreen) }
 
-	/** used by ModelParser to create [State] object from persisted data */
+	@Deprecated("This function no longer needs to be overwritten and will be removed. " +
+			"Provide a custom StateProvider instead", ReplaceWith("createState(widgets, isHomeScreen)"))
 	open fun parseState(widgets: Collection<W>, isHomeScreen: Boolean): S =
+		createState(widgets, isHomeScreen)
+
+	/**
+	 * used by ModelParser (loading model from persisted data) and in [updateModel] to create [State] object.
+	 * However, the resulting state is **not added** to this model.
+	 */
+	fun createState(widgets: Collection<W>, isHomeScreen: Boolean): S =
 		stateProvider.create(widgets, isHomeScreen)
 
 	/** override this function if the Widget class was extended to create the custom object here */
-	protected open fun createWidget(properties: UiElementPropertiesI, parent: ConcreteId?): W =
+	protected fun createWidget(properties: UiElementPropertiesI, parent: ConcreteId?): W =
 		widgetProvider.create(properties, parent)
 
 	private fun generateWidgets(action: ActionResult, @Suppress("UNUSED_PARAMETER") trace: ExplorationTrace<S,W>): Collection<W>{
@@ -151,7 +159,8 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 					//					check(elements[it]!=null){"ERROR no element with hashId $it in working queue"}
 					if(elements[it] == null)
 						logger.warn("could not find child with id $it of widget $this ")
-					else workQueue.add(elements[it] ?: error("Missing Widget with idHash '$it'")) } //FIXME if null we can try to find element.parentId = this.idHash !IN workQueue as repair function, but why does it happen at all
+					else workQueue.add(elements[it]
+						?: error("Missing Widget with idHash '$it'")) } //FIXME if null we can try to find element.parentId = this.idHash !IN workQueue as repair function, but why does it happen at all
 			}
 		}
 		check(widgets.size==elements.size){"ERROR not all UiElements were generated correctly in the model ${elements.filter { !widgets.containsKey(it.key) }.values}"}
@@ -169,6 +178,10 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 	/*********** debugging parameters *********************************/
 	/** debugging counter do not use it in productive code, instead access the respective element set */
 	private var nWidgets = 0
+	internal fun incWidgetCounter(num: Int) {
+		nWidgets += num
+	}
+
 	/** debugging counter do not use it in productive code, instead access the respective element set */
 	private var nStates get() =  stateProvider.numStates
 	set(value){

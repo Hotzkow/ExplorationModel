@@ -59,7 +59,7 @@ object ModelParser{
 	                                                           autoFix: Boolean = false, sequential: Boolean = false, enablePrint: Boolean = false,
 	                                                           contentReader: ContentReader = ContentReader(config), enableChecks: Boolean = true,
 	                                                           customHeaderMap: Map<String,String> = emptyMap()) =
-		loadModel(watcher,autoFix,sequential,enablePrint,DefaultModelProvider().apply { initConfig(config) },contentReader,enableChecks,customHeaderMap)
+		loadModel(watcher,autoFix,sequential,enablePrint,DefaultModelProvider().apply { init(config) },contentReader,enableChecks,customHeaderMap)
 	@JvmOverloads suspend fun<M: AbstractModel<State<*>,Widget>> loadModel(watcher: LinkedList<ModelFeatureI> = LinkedList(),
 	                                    autoFix: Boolean = false, sequential: Boolean = false, enablePrint: Boolean = false,
 	                                                           modelProvider: ModelProvider<M>,
@@ -103,6 +103,7 @@ internal abstract class ModelParserI<T,DeferredState,DeferredWidget,M: AbstractM
 	abstract val isSequential: Boolean
 	abstract val stateMap: Map<ConcreteId,ConcreteId>
 	abstract val widgetMap: Map<ConcreteId,ConcreteId>
+	abstract val processor: suspend (s: List<String>, CoroutineScope) -> T
 
 	override val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -293,7 +294,7 @@ internal abstract class ModelParserI<T,DeferredState,DeferredWidget,M: AbstractM
 				//MISSING translation of BoundsX,..Y,..Width,..Height to visibleBoundaries
 				//MISSING instead of parentHash we had parentID persisted
 			)
-val modelProvider = DefaultModelProvider().apply { initConfig(config) }
+val modelProvider = DefaultModelProvider().apply { init(config) }
 			val m =
 				//				loadModel(config, autoFix = false, sequential = true)
 				runBlocking { ModelParser.loadModel(config = config, autoFix = false, sequential = true, enablePrint = false//, customHeaderMap = headerMap

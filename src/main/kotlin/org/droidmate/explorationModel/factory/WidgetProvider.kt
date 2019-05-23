@@ -36,7 +36,7 @@ abstract class WidgetProvider<T: Widget>: WidgetFactory<T> {
 	protected abstract fun init(properties: UiElementPropertiesI,parentId: ConcreteId?):T
 	protected fun init(args: Pair<UiElementPropertiesI,ConcreteId?>) = init(args.first,args.second)
 
-	// if memory becomes an issue we could use a 'common' set of widgets based on ConcreteId and take the element out of this set if it already exists and only call init otherwise
+	// if memory becomes an issue we could use a 'common' set of widgets based on ConcreteId and take the element out of this set if it already exists and only call create otherwise
 	override fun create(arg: Pair<UiElementPropertiesI,ConcreteId?>): T = mocked ?: init(arg)
 	override fun empty(): T = emptyWidget ?: init(DummyProperties,null).also { emptyWidget = it }
 }

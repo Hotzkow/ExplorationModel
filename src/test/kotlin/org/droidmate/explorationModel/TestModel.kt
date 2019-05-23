@@ -46,7 +46,7 @@ internal class DefaultTestModel: TestModel {
 	override val testWidget: Widget by lazy{ super.testWidget }
 	override val parentWidget: Widget by lazy{ super.parentWidget }
 
-	override val testWidgetDumpString = "1db4c18e-a236-35af-b51d-f9a0bfbe8847_5d802df8-481b-3882-9c3b-95ea87b08a03;" +
+	override val testWidgetDumpString = "${with(testWidgetData){"$hintText $text $contentDesc".sanitize().toUUID()}}_5d802df8-481b-3882-9c3b-95ea87b08a03;" +
 			"class-mock;text-mock;Dummy-hintText;description-mock;0;disabled;false;11:136:81:51;11:136:81:51;[];true;true;true;disabled;" +
 			"0;0;false;false;false;false;package-mock;0;resourceId-mock;false;false;[11:136:81:51];No-xPath"
 }

@@ -1,6 +1,5 @@
 package org.droidmate.explorationModel.retention.loading
 
-import kotlinx.coroutines.CoroutineScope
 import org.droidmate.explorationModel.debugOut
 import org.droidmate.explorationModel.factory.AbstractModel
 import org.droidmate.explorationModel.factory.ModelProvider
@@ -10,7 +9,6 @@ internal interface ParserI<T,out R, M: AbstractModel<*,*>> {
 	val modelProvider: ModelProvider<M>
 	val model get() = modelProvider.get()
 
-	val processor: suspend (s: List<String>, scope: CoroutineScope) -> T
 	suspend fun getElem(e: T): R
 
 	val logger: Logger

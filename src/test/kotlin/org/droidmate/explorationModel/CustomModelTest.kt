@@ -47,7 +47,7 @@ class CustomModel(
 
 class CustomModelProvider(config: ModelConfig): ModelProvider<CustomModel>() {
 	init {
-		super.initConfig(config)
+		super.init(config)
 	}
 
 	val stateProvider = object : StateProvider<CustomState,CustomWidget>(){
@@ -59,6 +59,6 @@ class CustomModelProvider(config: ModelConfig): ModelProvider<CustomModel>() {
 		override fun init(properties: UiElementPropertiesI, parentId: ConcreteId?): CustomWidget = CustomWidget(properties,parentId)
 	}
 
-	override fun init(config: ModelConfig): CustomModel
+	override fun create(config: ModelConfig): CustomModel
 	= CustomModel(config = config, stateProvider = stateProvider, widgetProvider = widgetProvider)
 }

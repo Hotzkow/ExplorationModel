@@ -36,7 +36,7 @@ class ModelLoadTester: TestI, TestModel by DefaultTestModel(), ModelLoaderTI by 
 				,testWidget.dataString(sep))
 	}
 
-	@Test fun loadTest(){ //FIXME
+	@Test fun loadTest(){
 		val actions = listOf(createTestAction(testWidget, testState.stateId))
 		val model = execute(listOf(actions),states)
 		runBlocking {

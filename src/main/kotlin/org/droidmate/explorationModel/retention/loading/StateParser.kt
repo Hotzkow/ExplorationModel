@@ -13,16 +13,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.associate
-import kotlin.collections.emptyMap
-import kotlin.collections.find
-import kotlin.collections.forEach
-import kotlin.collections.get
-import kotlin.collections.groupBy
-import kotlin.collections.map
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
@@ -46,8 +36,6 @@ internal abstract class StateParserI<T,DeferredWidget, M: AbstractModel<State<*>
 	/** parse the state either asynchronous (Deferred) or sequential (blocking) */
 	@Suppress("FunctionName")
 	abstract fun P_S_process(id: ConcreteId, coroutineContext: CoroutineContext): T
-
-	override val processor: suspend (s: List<String>, scope: CoroutineScope) -> T = { _,_ -> TODO("not necessary anymore") }
 
 	internal val parseIfAbsent: (CoroutineContext) -> (ConcreteId)->T =	{ context ->{ id ->
 		log("parse absent state $id")
@@ -83,7 +71,7 @@ internal abstract class StateParserI<T,DeferredWidget, M: AbstractModel<State<*>
 		model.incWidgetCounter(widgets.size)
 
 		return if (widgets.isNotEmpty()) {
-			model.parseState(widgets, isHomeScreen).also { newState:State<*>->
+			model.createState(widgets, isHomeScreen).also { newState:State<*>->
 
 				verify("ERROR different set of widgets used for UID computation used", {
 					stateId == newState.stateId
@@ -119,6 +107,7 @@ internal class StateParserP<M: AbstractModel<State<*>,Widget>>(override val widg
 	: StateParserI<Deferred<State<*>>, Deferred<UiElementPropertiesI>, M>() {
 	override val queue: MutableMap<ConcreteId, Deferred<State<*>>> = ConcurrentHashMap()
 
+	@Suppress("DeferredIsResult")
 	override fun P_S_process(id: ConcreteId, coroutineContext: CoroutineContext): Deferred<State<*>> =	CoroutineScope(coroutineContext+Job()).async(CoroutineName("parseWidget $id")){
 		log("parallel compute state $id")
 		computeState(id)

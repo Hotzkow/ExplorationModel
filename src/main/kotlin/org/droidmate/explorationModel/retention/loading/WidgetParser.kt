@@ -59,7 +59,7 @@ internal abstract class WidgetParserI<T,M: AbstractModel<*,*>>: ParserI<Pair<Con
 			P_S_process(line,id, scope).second
 		}
 	}
-	override val processor: suspend (s: List<String>, scope: CoroutineScope) -> Pair<ConcreteId, T> = { s,cs -> parseWidget(s,cs) }
+	val processor: suspend (s: List<String>, scope: CoroutineScope) -> Pair<ConcreteId, T> = { s,cs -> parseWidget(s,cs) }
 
 	fun fixedWidgetId(idString: String) = ConcreteId.fromString(idString)?.let{	idMapping[it] ?: it }
 	fun fixedWidgetId(idString:ConcreteId?) = idString?.let{	idMapping[it] ?: it }
