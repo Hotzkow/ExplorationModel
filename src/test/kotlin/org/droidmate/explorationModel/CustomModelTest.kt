@@ -52,7 +52,6 @@ class CustomModelProvider(config: ModelConfig): ModelProvider<CustomModel>() {
 
 	val stateProvider = object : StateProvider<CustomState,CustomWidget>(){
 		override fun init(widgets: Collection<CustomWidget>, isHomeScreen: Boolean): CustomState = CustomState(widgets, isHomeScreen)
-		override suspend fun getStates(): Collection<CustomState> = states.getAll()
 	}
 	@Suppress("MemberVisibilityCanBePrivate")
 	val widgetProvider = object : WidgetProvider<CustomWidget>(){

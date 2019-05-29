@@ -87,7 +87,7 @@ suspend inline fun<reified T, reified R: Any> SendChannel<CollectionMsg<T, R?>>.
 		= this.let{actor -> with(CompletableDeferred<R?>()){ actor.send(Get(predicate, this)); this.await()} }!!
 
 /** @return a copy of the actors current private collection (actorState) */
-suspend inline fun<reified T, reified R> SendChannel<CollectionMsg<T, R>>.getAll(): R
+suspend inline fun<T, R> SendChannel<CollectionMsg<T, R>>.getAll(): R
 		= this.let{actor -> with(CompletableDeferred<R>()){ actor.send(GetAll(this)); this.await()} }
 
 /** @return (blocking) a copy of the actors current private collection (actorState).

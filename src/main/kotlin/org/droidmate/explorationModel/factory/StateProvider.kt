@@ -44,18 +44,19 @@ abstract class StateProvider<T,W> : StateFactory<T,W> where T: State<W>, W: Widg
 	override fun create(arg: Pair<Collection<W>,Boolean>): T = mocked ?: init(arg)
 
 	override var numStates: Int = 0
-	protected val states = CollectionActor(HashSet<T>(), "StateActor").create()
+	private val states = CollectionActor(HashSet<T>(), "StateActor").create()
 
 	private var emptyState: T? = null
 	override fun empty(): T = emptyState ?: create(emptyList())
+
 	/** should be used only by model loader/parser */
 	override suspend fun addState(e: T){
 		numStates +=1
 		states.send(Add(e))
 	}
+	override suspend fun getStates(): Collection<T> = states.getAll()
 }
 
 open class DefaultStateProvider: StateProvider<State<Widget>,Widget>() {
 	override fun init(widgets: Collection<Widget>, isHomeScreen: Boolean): State<Widget> = State(widgets,isHomeScreen)
-	override suspend fun getStates(): Collection<State<Widget>> = states.getAll()
 }
