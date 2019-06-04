@@ -29,9 +29,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.system.measureNanoTime
 
-/** custom type aliases and extension functions */
-typealias DeactivatableFlag = Boolean?
-
 data class ConcreteId(val uid: UUID, val configId: UUID): Serializable {
 	override fun toString(): String = "${uid}_$configId"
 
@@ -154,6 +151,7 @@ internal class UiElementP( properties: Map<String,Any?>) : UiElementPropertiesI 
 	override val imgId: Int by properties
 	override val visibleAreas: List<Rectangle> by properties
 	override val hasUncoveredArea: Boolean by properties
+	override val hasClickableDescendant: Boolean by properties
 }
 
 object DummyProperties: UiElementPropertiesI {
@@ -185,4 +183,5 @@ object DummyProperties: UiElementPropertiesI {
 	override val idHash: Int = 0
 	override val parentHash: Int = 0
 	override val childHashes: List<Int> = emptyList()
+	override val hasClickableDescendant: Boolean = false
 }

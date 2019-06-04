@@ -23,10 +23,7 @@
 
 package org.droidmate.explorationModel.interaction
 
-import org.droidmate.deviceInterface.exploration.PType
-import org.droidmate.deviceInterface.exploration.Persistent
-import org.droidmate.deviceInterface.exploration.Rectangle
-import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
+import org.droidmate.deviceInterface.exploration.*
 import org.droidmate.explorationModel.*
 import org.droidmate.explorationModel.retention.StringCreator
 import java.util.*
@@ -75,7 +72,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	open fun isLeaf(): Boolean = childHashes.isEmpty()
 
 	protected open fun computeInteractive(): Boolean =
-			enabled && ( isInputField || clickable || checked != null || longClickable || scrollable)
+			enabled && ( isInputField || clickable || checked != null || longClickable || scrollable || (!hasClickableDescendant && selected.isActivated()) )
 
 	/**
 	 * @see computeUId
@@ -160,7 +157,8 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	final override val longClickable: Boolean = properties.longClickable
 	final override val scrollable: Boolean = properties.scrollable
 	final override val focused: DeactivatableFlag = properties.focused
-	final override val selected: Boolean = properties.selected
+	final override val selected: DeactivatableFlag = properties.selected
+	final override val hasClickableDescendant: Boolean = properties.hasClickableDescendant
 	final override val boundaries = properties.boundaries
 	final override val visibleAreas: List<org.droidmate.deviceInterface.exploration.Rectangle> = properties.visibleAreas
 	final override val xpath: String = properties.xpath
