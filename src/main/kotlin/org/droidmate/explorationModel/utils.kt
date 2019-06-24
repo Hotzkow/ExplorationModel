@@ -20,8 +20,10 @@
 
 package org.droidmate.explorationModel
 
+import com.natpryce.konfig.ConfigurationProperties
 import org.droidmate.deviceInterface.exploration.Rectangle
 import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
+import java.io.File
 import java.io.Serializable
 import java.nio.charset.Charset
 import java.time.LocalDateTime
@@ -185,3 +187,30 @@ object DummyProperties: UiElementPropertiesI {
 	override val childHashes: List<Int> = emptyList()
 	override val hasClickableDescendant: Boolean = false
 }
+
+/**
+ * This function loads the configuration from the resource defined by [resourcePath].
+ * If this function is called from code within a jar dependency,
+ * the file is temporarily extracted and deleted after it was loaded successfully.
+ */
+fun ConfigurationProperties.Companion.configFromResource(resourcePath: String): ConfigurationProperties =
+	if (ClassLoader.getSystemResources(resourcePath).toList().isEmpty()) {
+		// this module is part of a jar dependency, therefore we have to copy the resource to a file first (or fix the 'konfig' library)
+		val inS = this::class.java.getResourceAsStream(resourcePath)
+			?: throw RuntimeException("cannot load resource file $resourcePath")
+
+		// input stream from resource loaded, write to tmp file
+		val tmpFile = File("tmp_res-modelConfig.properties")
+		inS.use { resource ->
+			tmpFile.outputStream().use { fileOut ->
+				resource.copyTo(fileOut)
+			}
+		}
+		// load configuration from tmp file
+		ConfigurationProperties.Companion.fromFile(tmpFile).also {
+			tmpFile.delete()
+		}
+	} else {
+		ConfigurationProperties.Companion.fromResource(resourcePath)
+	}
+

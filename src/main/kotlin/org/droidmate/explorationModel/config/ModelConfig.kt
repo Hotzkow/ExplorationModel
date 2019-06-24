@@ -18,7 +18,9 @@
 
 package org.droidmate.explorationModel.config
 
-import com.natpryce.konfig.*
+import com.natpryce.konfig.Configuration
+import com.natpryce.konfig.ConfigurationProperties
+import com.natpryce.konfig.overriding
 import org.droidmate.explorationModel.ConcreteId
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.dump.stateFileExtension
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.dump.traceFileExtension
@@ -26,9 +28,10 @@ import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.du
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.cleanDirs
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.cleanImgs
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.defaultBaseDir
-import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.statesSubDir
 import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.imagesSubDir
+import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.path.statesSubDir
 import org.droidmate.explorationModel.config.ConfigProperties.Output.outputDir
+import org.droidmate.explorationModel.configFromResource
 import org.droidmate.explorationModel.debugOutput
 import org.droidmate.explorationModel.measurePerformance
 import java.io.File
@@ -74,8 +77,8 @@ class ModelConfig private constructor(path: Path,
 
 	companion object {
 
-		private val resourceConfig by lazy {
-			ConfigurationProperties.fromResource("runtime/defaultModelConfig.properties")
+		private val resourceConfig: ConfigurationProperties by lazy {
+			ConfigurationProperties.configFromResource("/defaultModelConfig.properties")
 		}
 
 		@JvmOverloads operator fun invoke(appName: String, isLoadC: Boolean = false, cfg: Configuration? = null): ModelConfig {
