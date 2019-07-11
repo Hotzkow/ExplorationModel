@@ -63,7 +63,7 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 	suspend fun getWidgets(): Collection<W> = getStates().flatMap { it.widgets }
 
 	/** create a new empty trace with given [id] (or random id if none is provided), and add it to this model */
-	open fun initNewTrace(watcher: MutableList<ModelFeatureI>, id: UUID = UUID.randomUUID()): ExplorationTrace<S,W> {
+	open fun initNewTrace(watcher: MutableList<ModelFeatureI> = mutableListOf(), id: UUID = UUID.randomUUID()): ExplorationTrace<S,W> {
 		return ExplorationTrace(watcher, config, id, stateProvider.empty()).also { actionTrace ->
 			paths.add(actionTrace)
 		}

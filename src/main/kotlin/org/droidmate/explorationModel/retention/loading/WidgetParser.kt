@@ -7,7 +7,6 @@ import org.droidmate.deviceInterface.exploration.UiElementPropertiesI
 import org.droidmate.explorationModel.*
 import org.droidmate.explorationModel.factory.AbstractModel
 import org.droidmate.explorationModel.factory.ModelProvider
-import org.droidmate.explorationModel.interaction.State
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
@@ -91,7 +90,7 @@ internal abstract class WidgetParserI<T,M: AbstractModel<*,*>>: ParserI<Pair<Con
 	}
 }
 
-internal class WidgetParserS<M: AbstractModel<State<*>,Widget>>(override val modelProvider: ModelProvider<M>,
+internal class WidgetParserS<M: AbstractModel<*,*>>(override val modelProvider: ModelProvider<M>,
                              override val compatibilityMode: Boolean = false,
                              override val enableChecks: Boolean = true): WidgetParserI<UiElementPropertiesI,M>() {
 
@@ -102,7 +101,7 @@ internal class WidgetParserS<M: AbstractModel<State<*>,Widget>>(override val mod
 	override val queue: MutableMap<ConcreteId, UiElementPropertiesI> = HashMap()
 }
 
-internal class WidgetParserP<M: AbstractModel<State<*>,Widget>>(override val modelProvider: ModelProvider<M>,
+internal class WidgetParserP<M: AbstractModel<*,*>>(override val modelProvider: ModelProvider<M>,
                                                      override val compatibilityMode: Boolean = false,
                                                      override val enableChecks: Boolean = true): WidgetParserI<Deferred<UiElementPropertiesI>,M>(){
 

@@ -116,8 +116,8 @@ object StringCreator {
 	fun parseWidgetPropertyString(values: List<String>, indexMap: Map<WidgetProperty,Int>): UiElementPropertiesI
 	= UiElementP(	baseAnnotations.parsePropertyString(values,indexMap) )
 
-	fun parseActionPropertyString(values: List<String>, target: Widget?,
-	                                       indexMap: Map<AnnotatedProperty<Interaction<Widget>>, Int> = defaultActionMap): Interaction<Widget>
+	fun<W: Widget> parseActionPropertyString(values: List<String>, target: W?,
+	                                       indexMap: Map<AnnotatedProperty<Interaction<Widget>>, Int> = defaultActionMap): Interaction<W>
 			= with(actionProperties.parsePropertyString(values,indexMap)){
 		Interaction( targetWidget = target,
 				actionType = get(Interaction<*>::actionType.name) as String,

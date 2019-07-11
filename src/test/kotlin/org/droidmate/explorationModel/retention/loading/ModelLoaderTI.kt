@@ -75,7 +75,8 @@ class TestReader(config: ModelConfig): ContentReader(config){
 }
 
 @ExperimentalCoroutinesApi
-internal class ModelLoaderT(override val config: ModelConfig): ModelParserP<DefaultModel<State<Widget>, Widget>>(config, enableChecks = true, modelProvider = DefaultModelProvider().apply { init(config) }), ModelLoaderTI {
+internal class ModelLoaderT(override val config: ModelConfig)
+	: ModelParserP<DefaultModel<State<Widget>, Widget>,State<Widget>,Widget>(config, enableChecks = true, modelProvider = DefaultModelProvider().apply { init(config) }), ModelLoaderTI {
 	override val sep: String= config[ConfigProperties.ModelProperties.dump.sep]
 
 	/** creating test environment */

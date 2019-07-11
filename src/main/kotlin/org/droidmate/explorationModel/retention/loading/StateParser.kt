@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
-internal abstract class StateParserI<T,DeferredWidget, M: AbstractModel<State<*>,Widget>>: ParserI<T, State<*>,M> {
+internal abstract class StateParserI<T,DeferredWidget, M: AbstractModel<S,W>, S: State<W>, W: Widget>: ParserI<T, S,M> {
 	var headerRenaming: Map<String,String> = emptyMap()
 	abstract val widgetParser: WidgetParserI<DeferredWidget,M>
 	abstract val reader: ContentReader
@@ -42,7 +42,7 @@ internal abstract class StateParserI<T,DeferredWidget, M: AbstractModel<State<*>
 		P_S_process(id,context)
 	}}
 
-	protected suspend fun computeState(stateId: ConcreteId): State<*> {
+	protected suspend fun computeState(stateId: ConcreteId): S {
 		log("\ncompute state $stateId")
 		val(contentPath,isHomeScreen) = reader.getStateFile(stateId)
 		if(!widgetParser.indicesComputed.get()) {
@@ -71,7 +71,7 @@ internal abstract class StateParserI<T,DeferredWidget, M: AbstractModel<State<*>
 		model.incWidgetCounter(widgets.size)
 
 		return if (widgets.isNotEmpty()) {
-			model.createState(widgets, isHomeScreen).also { newState:State<*>->
+			model.createState(widgets, isHomeScreen).also { newState:S->
 
 				verify("ERROR different set of widgets used for UID computation used", {
 					stateId == newState.stateId
@@ -87,32 +87,32 @@ internal abstract class StateParserI<T,DeferredWidget, M: AbstractModel<State<*>
 
 }
 
-internal class StateParserS<M: AbstractModel<State<*>, Widget>>(override val widgetParser: WidgetParserS<M>,
+internal class StateParserS<M: AbstractModel<S,W>, S: State<W>, W: Widget>(override val widgetParser: WidgetParserS<M>,
                                                                 override val reader: ContentReader,
                                                                 override val modelProvider: ModelProvider<M>,
                                                                 override val compatibilityMode: Boolean,
-                                                                override val enableChecks: Boolean) : StateParserI<State<*>, UiElementPropertiesI, M>() {
-	override val queue: MutableMap<ConcreteId, State<*>> = HashMap()
+                                                                override val enableChecks: Boolean) : StateParserI<S, UiElementPropertiesI, M,S,W>() {
+	override val queue: MutableMap<ConcreteId, S> = HashMap()
 
-	override fun P_S_process(id: ConcreteId, coroutineContext: CoroutineContext): State<*> = runBlocking { computeState(id) }
+	override fun P_S_process(id: ConcreteId, coroutineContext: CoroutineContext): S = runBlocking { computeState(id) }
 
-	override suspend fun getElem(e: State<*>): State<*> = e
+	override suspend fun getElem(e: S): S = e
 }
 
-internal class StateParserP<M: AbstractModel<State<*>,Widget>>(override val widgetParser: WidgetParserP<M>,
+internal class StateParserP<M: AbstractModel<S,W>, S: State<W>, W: Widget>(override val widgetParser: WidgetParserP<M>,
                                                     override val reader: ContentReader,
                                                     override val modelProvider: ModelProvider<M>,
                                                     override val compatibilityMode: Boolean,
                                                     override val enableChecks: Boolean)
-	: StateParserI<Deferred<State<*>>, Deferred<UiElementPropertiesI>, M>() {
-	override val queue: MutableMap<ConcreteId, Deferred<State<*>>> = ConcurrentHashMap()
+	: StateParserI<Deferred<S>, Deferred<UiElementPropertiesI>, M,S,W>() {
+	override val queue: MutableMap<ConcreteId, Deferred<S>> = ConcurrentHashMap()
 
 	@Suppress("DeferredIsResult")
-	override fun P_S_process(id: ConcreteId, coroutineContext: CoroutineContext): Deferred<State<*>> =	CoroutineScope(coroutineContext+Job()).async(CoroutineName("parseWidget $id")){
+	override fun P_S_process(id: ConcreteId, coroutineContext: CoroutineContext): Deferred<S> =	CoroutineScope(coroutineContext+Job()).async(CoroutineName("parseWidget $id")){
 		log("parallel compute state $id")
 		computeState(id)
 	}
 
-	override suspend fun getElem(e: Deferred<State<*>>): State<*> =
+	override suspend fun getElem(e: Deferred<S>): S =
 			e.await()
 }
