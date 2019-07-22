@@ -72,7 +72,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	open fun isLeaf(): Boolean = childHashes.isEmpty()
 
 	protected open fun computeInteractive(): Boolean =
-			enabled && ( isInputField || clickable || checked != null || longClickable || scrollable || (!hasClickableDescendant && selected.isActivated()) )
+			enabled && ( isInputField || clickable || checked != null || longClickable || scrollable || (!hasClickableDescendant && selected.isEnabled()) )
 
 	/**
 	 * @see computeUId
