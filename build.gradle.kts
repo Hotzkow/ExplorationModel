@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-@file:Suppress("SpellCheckingInspection")
+@file:Suppress("SpellCheckingInspection", "UnstableApiUsage")
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -33,14 +33,19 @@ repositories {
 }
 
 dependencies {
-	compile ("com.github.hotzkow:platformInterfaceLib:2.4.1") // in theory it should be 'api', but for some reason that does not work for transitive classpath dependencies
+	compile ("com.github.hotzkow:platformInterfaceLib") {
+		// in theory it should be 'api', but for some reason that does not work for transitive classpath dependencies
+		version {
+			require("[2.4.1,2.5[")
+		}
+	}
 	implementation ("com.natpryce:konfig:1.6.6.0")  // configuration library
 	implementation ("org.slf4j:slf4j-api:1.7.25")
 
 	// we need the jdk dependency instead of stdlib to have enhanced java features like tue 'use' function for try-with-resources
 	implementation (group= "org.jetbrains.kotlin", name= "kotlin-stdlib-jdk8")
 	implementation ("org.jetbrains.kotlin:kotlin-reflect") // because we need reflection to get annotated property values
-	implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0")
+	implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
 	testImplementation (group= "junit", name= "junit", version= "4.12")
 }
