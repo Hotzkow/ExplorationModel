@@ -23,7 +23,6 @@ package org.droidmate.explorationModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 
 // we have exactly one thread who is going to handle our model actors
 // (we use an own thread to avoid blocking issues for mono/duo-cores, where the default thread-pool only has size 1)
