@@ -19,7 +19,7 @@
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-version = "1.4.1-SNAPSHOT"
+version = "1.4.2"
 
 plugins {
 	id("org.jetbrains.kotlin.jvm") apply true

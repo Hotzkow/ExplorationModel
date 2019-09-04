@@ -45,6 +45,7 @@ open class Interaction<out W: Widget> (
 		@property:Persistent("Resulting State", 3, PType.ConcreteId) val resState: ConcreteId,
 		@property:Persistent("Action-Id", 9, PType.Int) val actionId: Int,
 		@property:Persistent("Data", 8) val data: String = "",
+		@property:Persistent("HasResultScreen", 10) val hasResultScreenshot: Boolean = false,
 		val deviceLogs: DeviceLogs = emptyList(),
 		@Suppress("unused") val meta: String = "") {
 
@@ -52,25 +53,27 @@ open class Interaction<out W: Widget> (
 			: this(actionType = res.action.name, targetWidget = target,
 			startTimestamp = res.startTimestamp, endTimestamp = res.endTimestamp, successful = res.successful,
 			exception = res.exception, prevState = prevStateId, resState = resStateId, data = computeData(res.action),
-			deviceLogs = res.deviceLogs,	meta = res.action.id.toString(), actionId = res.action.id)
+			deviceLogs = res.deviceLogs,	meta = res.action.id.toString(), actionId = res.action.id, hasResultScreenshot = res.guiSnapshot.capturedScreen)
 
 	/** used for ActionQueue entries */
 	constructor(action: ExplorationAction, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: W?)
 			: this(action.name, target, res.startTimestamp,
 			res.endTimestamp, successful = res.successful, exception = res.exception, prevState = prevStateId,
-			resState = resStateId, data = computeData(action), deviceLogs = res.deviceLogs, actionId = action.id)
+			resState = resStateId, data = computeData(action), deviceLogs = res.deviceLogs, actionId = action.id, hasResultScreenshot = res.guiSnapshot.capturedScreen)
 
 	/** used for ActionQueue start/end Interaction */
 	internal constructor(actionName:String, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId)
 			: this(actionName, null, res.startTimestamp,
 			res.endTimestamp, successful = res.successful, exception = res.exception, prevState = prevStateId,
-			resState = resStateId, deviceLogs = res.deviceLogs, actionId = res.action.id)
+			resState = resStateId, deviceLogs = res.deviceLogs, actionId = res.action.id, hasResultScreenshot = res.guiSnapshot.capturedScreen)
 
 	/** used for parsing from string */
 	constructor(actionType: String, target: W?, startTimestamp: LocalDateTime, endTimestamp: LocalDateTime,
-	            successful: Boolean, exception: String, resState: ConcreteId, prevState: ConcreteId, data: String = "", actionId: Int)
+	            successful: Boolean, exception: String, resState: ConcreteId, prevState: ConcreteId, data: String = "",
+	            actionId: Int, hasResultScreenshot: Boolean = false)
 			: this(actionType = actionType, targetWidget = target, startTimestamp = startTimestamp, endTimestamp = endTimestamp,
-			successful = successful, exception = exception, prevState = prevState, resState = resState, data = data, actionId = actionId)
+			successful = successful, exception = exception, prevState = prevState, resState = resState, data = data,
+		actionId = actionId, hasResultScreenshot = hasResultScreenshot)
 
 
 	/**
