@@ -1,6 +1,5 @@
 package org.droidmate.explorationModel.retention.loading
 
-import org.droidmate.explorationModel.debugOut
 import org.droidmate.explorationModel.factory.AbstractModel
 import org.droidmate.explorationModel.factory.ModelProvider
 import org.slf4j.Logger
@@ -12,9 +11,10 @@ internal interface ParserI<T,out R, M: AbstractModel<*,*>> {
 	suspend fun getElem(e: T): R
 
 	val logger: Logger
-	val enableDebug get() = false
-	fun log(msg: String)
-		 = debugOut("[${Thread.currentThread().name}] $msg", enableDebug)
+	val enablePrint get() = false
+	fun log(msg: String) {
+		if(enablePrint) logger.debug( msg)
+	}
 
 	val compatibilityMode: Boolean
 	val enableChecks: Boolean

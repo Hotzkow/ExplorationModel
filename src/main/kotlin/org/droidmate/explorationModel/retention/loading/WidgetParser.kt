@@ -92,7 +92,8 @@ internal abstract class WidgetParserI<T,M: AbstractModel<*,*>>: ParserI<Pair<Con
 
 internal class WidgetParserS<M: AbstractModel<*,*>>(override val modelProvider: ModelProvider<M>,
                              override val compatibilityMode: Boolean = false,
-                             override val enableChecks: Boolean = true): WidgetParserI<UiElementPropertiesI,M>() {
+                             override val enableChecks: Boolean = true,
+                             override val enablePrint: Boolean): WidgetParserI<UiElementPropertiesI,M>() {
 
 	override fun P_S_process(s: List<String>, id: ConcreteId, scope: CoroutineScope): Pair<ConcreteId,UiElementPropertiesI> = runBlocking{ computeWidget(s,id) }
 
@@ -102,8 +103,9 @@ internal class WidgetParserS<M: AbstractModel<*,*>>(override val modelProvider: 
 }
 
 internal class WidgetParserP<M: AbstractModel<*,*>>(override val modelProvider: ModelProvider<M>,
-                                                     override val compatibilityMode: Boolean = false,
-                                                     override val enableChecks: Boolean = true): WidgetParserI<Deferred<UiElementPropertiesI>,M>(){
+                                                    override val compatibilityMode: Boolean = false,
+                                                    override val enableChecks: Boolean = true,
+                                                    override val enablePrint: Boolean): WidgetParserI<Deferred<UiElementPropertiesI>,M>(){
 
 
 	override fun P_S_process(s: List<String>, id: ConcreteId, scope: CoroutineScope): Pair<ConcreteId,Deferred<UiElementPropertiesI>>

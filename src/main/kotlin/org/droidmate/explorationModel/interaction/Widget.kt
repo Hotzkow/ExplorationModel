@@ -30,8 +30,10 @@ import java.util.*
 import kotlin.collections.HashMap
 
 @Suppress("unused")
-open class Widget constructor(properties: UiElementPropertiesI,
-                              val parentId: ConcreteId?): UiElementPropertiesI {
+open class Widget private constructor(properties: UiElementPropertiesI,
+                              val parentId: ConcreteId?, overrideId: ConcreteId?): UiElementPropertiesI {
+
+	constructor(properties: UiElementPropertiesI, parentId: ConcreteId?): this(properties,parentId,null)
 
 	override val metaInfo: List<String> = properties.metaInfo
 
@@ -47,7 +49,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	 * @see computeConcreteId
 	 */
 	@property:Persistent("Unique Id",0, PType.ConcreteId)
-	val id by lazy { computeConcreteId() }
+	val id by lazy { overrideId ?: computeConcreteId() }
 
 	/** This property determines if we could interact with this element, however it may be currently out of screen,
 	 * such that we need to navigate to it firs.
@@ -169,7 +171,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 	final override val hasUncoveredArea: Boolean = properties.hasUncoveredArea
 
 	@JvmOverloads open fun copy(boundaries: Rectangle = this.boundaries, visibleBounds:Rectangle = this.visibleBounds,
-	                       defVisible:Boolean=this.definedAsVisible): Widget{
+	                       defVisible:Boolean=this.definedAsVisible, id:ConcreteId? = null): Widget{
 		val properties: MutableMap<String,Any?> = HashMap()
 		StringCreator.annotatedProperties.forEach { p ->
 			properties[p.property.name] = p.property.call(this)
@@ -177,7 +179,7 @@ open class Widget constructor(properties: UiElementPropertiesI,
 		properties[this::boundaries.name] = boundaries
 		properties[this::visibleBounds.name] = visibleBounds
 		properties[this::definedAsVisible.name] = defVisible
-		return Widget(UiElementP(properties),parentId)
+		return Widget(UiElementP(properties),parentId,id)
 	}
 	/* end override */
 

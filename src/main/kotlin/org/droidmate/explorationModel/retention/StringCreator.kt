@@ -42,7 +42,7 @@ fun PropertyValue.getValue() = this.second
 
 data class AnnotatedProperty<R>(val property: KProperty1<out R, *>, val annotation: Persistent){
 	private fun String.getListElements(): List<String> = substring(1,length-1)// remove the list brackets '[ .. ]'
-			.split(",").filter { it.trim().isNotBlank() } // split into separate list elements
+			.split(StringCreator.listElemSep).filter { it.trim().isNotBlank() } // split into separate list elements
 
 	private fun String.parseRectangle() = this.split(Rectangle.toStringSeparator).map { it.trim() }.let{ params ->
 		check(params.size==4)
@@ -53,16 +53,24 @@ data class AnnotatedProperty<R>(val property: KProperty1<out R, *>, val annotati
 	fun parseValue(values: List<String>, indexMap: Map<AnnotatedProperty<R>,Int>): PropertyValue {
 		val s = indexMap[this]?.let{ values[it].trim() }
 		debugOut("parse $s of type ${annotation.type}", false)
-		return property.name to when (annotation.type) {
-			PType.Int -> s?.toInt() ?: 0
-			PType.DeactivatableFlag -> if (s == "disabled") null else s?.toBoolean() ?: false
-			PType.Boolean -> s?.toBoolean() ?: false
-			PType.Rectangle -> s?.parseRectangle() ?: Rectangle.empty()
-			PType.RectangleList -> s?.getListElements()?.map { it.parseRectangle() } ?: emptyList<Rectangle>() // create the list of rectangles
-			PType.String -> s?.replace("<newline>", "\n")?.replace("<semicolon>",";") ?: "NOT PERSISTED"
-			PType.IntList -> s?.getListElements()?.map { it.trim().toInt() } ?: emptyList<Int>()
-			PType.ConcreteId -> if(s == null) emptyId else ConcreteId.fromString(s)
-			PType.DateTime -> LocalDateTime.parse(s)
+		try {
+			return property.name to when (annotation.type) {
+				PType.Int -> s?.toInt() ?: 0
+				PType.DeactivatableFlag -> if (s == "disabled") null else s?.toBoolean() ?: false
+				PType.Boolean -> s?.toBoolean() ?: false
+				PType.Rectangle -> s?.parseRectangle() ?: Rectangle.empty()
+				PType.RectangleList -> s?.getListElements()?.map { it.parseRectangle() }
+					?: emptyList<Rectangle>() // create the list of rectangles
+				PType.String -> s?.replace("<newline>", "\n")
+					?.replace("<separator>", StringCreator.sep)
+					?.replace("<listElemSep>", StringCreator.listElemSep)
+					?: "NOT PERSISTED"
+				PType.IntList -> s?.getListElements()?.map { it.trim().toInt() } ?: emptyList<Int>()
+				PType.ConcreteId -> if (s == null) emptyId else ConcreteId.fromString(s)
+				PType.DateTime -> LocalDateTime.parse(s)
+			}
+		} catch (e: Throwable){
+			throw IllegalArgumentException("Error while parsing value $s of assumed type ${annotation.type} (${annotation.header})")
 		}
 	}
 
@@ -73,11 +81,20 @@ data class AnnotatedProperty<R>(val property: KProperty1<out R, *>, val annotati
 
 @Suppress("MemberVisibilityCanBePrivate")
 object StringCreator {
+	/** this value defines how elements of IntList or RectangleList are spearated from each other,
+	 * for compatibility to 'older' models this value has to be changed at run-time.
+	 * Usually this is done on ModelConfig.init or when calling ModelParser.loadModel */
+	var listElemSep = "|"
+	var sep = ";"
 	internal fun createPropertyString(t: PType, pv: Any?):String =
 			when{
 				t == PType.DeactivatableFlag -> pv?.toString() ?: "disabled"
 				t == PType.ConcreteId && pv is Widget? -> pv?.id.toString() // necessary for [Interaction.targetWidget]
-				t == PType.String -> pv!!.toString().replaceNewLine().replace(";","<semicolon>")
+				t == PType.String -> pv!!.toString().replaceNewLine()
+					.replace(sep,"<separator>")
+					.replace(listElemSep, "<listElemSep>")
+				t == PType.IntList || t == PType.RectangleList ->
+					(pv as List<*>).joinToString(separator = listElemSep, prefix = "[", postfix = "]")
 				else -> pv.toString()
 			}
 

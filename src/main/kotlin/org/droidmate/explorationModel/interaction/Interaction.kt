@@ -105,7 +105,8 @@ open class Interaction<out W: Widget> (
 
 	override fun toString(): String {
 		@Suppress("ReplaceSingleLineLet")
-		return "$actionType: widget[${targetWidget?.let { it.toString() }}]:\n$prevState->$resState"
+		return actionType + if (data.isNotBlank())"[${data}]" else "" +
+				": widget[${targetWidget?.let { it.toString() }}]:\n$prevState->$resState"
 	}
 
 	@Suppress("unused")

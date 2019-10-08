@@ -38,6 +38,7 @@ object ConfigProperties {
 
 		object dump : PropertyGroup() {
 			val sep by stringType
+			val listElemSep by stringType
 			val onEachAction by booleanType
 
 			val stateFileExtension by stringType

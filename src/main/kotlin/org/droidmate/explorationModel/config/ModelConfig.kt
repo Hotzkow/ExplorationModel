@@ -34,7 +34,9 @@ import org.droidmate.explorationModel.config.ConfigProperties.Output.outputDir
 import org.droidmate.explorationModel.configFromResource
 import org.droidmate.explorationModel.debugOutput
 import org.droidmate.explorationModel.measurePerformance
+import org.droidmate.explorationModel.retention.StringCreator
 import java.io.File
+import java.lang.IllegalArgumentException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -63,6 +65,12 @@ class ModelConfig private constructor(path: Path,
 		// disable debug output if debugMode is disabled
 		debugOutput = config[ConfigProperties.Output.debugMode]
 		measurePerformance = config[ConfigProperties.Output.debugMode]
+		StringCreator.listElemSep = config[ConfigProperties.ModelProperties.dump.listElemSep]
+		StringCreator.sep = config[ConfigProperties.ModelProperties.dump.sep]
+		require(StringCreator.listElemSep != StringCreator.sep) {
+			"The model config cannot use the same spearator for properties and list elements." +
+			"Please change ModelProperties.dump.sep or ModelProperties.dump.listElemSep"
+		}
 	}
 
 	private val idPath: (Path, String, String, String) -> String = { baseDir, id, postfix, fileExtension -> baseDir.toString() + "${File.separator}$id$postfix$fileExtension" }

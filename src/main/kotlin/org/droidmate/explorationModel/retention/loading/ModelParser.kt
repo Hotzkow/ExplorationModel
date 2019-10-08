@@ -16,6 +16,8 @@ import org.droidmate.deviceInterface.exploration.*
 import org.droidmate.explorationModel.ConcreteId
 import org.droidmate.explorationModel.ModelFeatureI
 import org.droidmate.explorationModel.config.ConfigProperties
+import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.dump.listElemSep
+import org.droidmate.explorationModel.config.ConfigProperties.ModelProperties.dump.sep
 import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.debugT
 import org.droidmate.explorationModel.emptyUUID
@@ -67,6 +69,8 @@ object ModelParser{
 	                                    customHeaderMap: Map<String,String> = emptyMap()
 	                                    )
 			: M{
+		StringCreator.listElemSep = modelProvider.config[listElemSep] // ensure the correct list separator is used for parsing
+		StringCreator.sep = modelProvider.config[sep]
 		if(sequential) return debugT("model loading (sequential)", {
 			ModelParserS(modelProvider.config, compatibilityMode = autoFix, enablePrint = enablePrint, reader = contentReader, enableChecks = enableChecks, modelProvider = modelProvider).loadModel(watcher, customHeaderMap)
 		}, inMillis = true)
@@ -99,7 +103,6 @@ internal abstract class ModelParserI<T,DeferredState,DeferredWidget,M: AbstractM
 	abstract val reader: ContentReader
 	abstract val stateParser: StateParserI<DeferredState, DeferredWidget,M,S,W>
 	abstract val widgetParser: WidgetParserI<DeferredWidget,M>
-	abstract val enablePrint: Boolean
 	abstract val isSequential: Boolean
 	abstract val stateMap: Map<ConcreteId,ConcreteId>
 	abstract val widgetMap: Map<ConcreteId,ConcreteId>
@@ -334,8 +337,8 @@ internal open class ModelParserP<M: AbstractModel<S,W>, S: State<W>, W: Widget>(
 	override val coroutineContext: CoroutineContext by lazy { Job() + CoroutineName("P-ModelParser ${config.appName}(${config.baseDir}") + Dispatchers.IO }
 	override val isSequential: Boolean = false
 
-	override val widgetParser by lazy { WidgetParserP(modelProvider, compatibilityMode, enableChecks) }
-	override val stateParser  by lazy { StateParserP(widgetParser, reader, modelProvider, compatibilityMode, enableChecks) }
+	override val widgetParser by lazy { WidgetParserP(modelProvider, compatibilityMode, enableChecks, enablePrint) }
+	override val stateParser  by lazy { StateParserP(widgetParser, reader, modelProvider, compatibilityMode, enableChecks, enablePrint) }
 	override val stateMap by lazy{ stateParser.idMapping }
 	override val widgetMap by lazy{ widgetParser.idMapping }
 
@@ -359,8 +362,8 @@ private class ModelParserS<M: AbstractModel<S,W>, S: State<W>, W: Widget>(overri
 	override val coroutineContext: CoroutineContext = Job() + CoroutineName("S-ModelParser ${config.appName}(${config.baseDir}") + Dispatchers.IO
 	override val isSequential: Boolean = true
 
-	override val widgetParser by lazy { WidgetParserS(modelProvider, compatibilityMode, enableChecks) }
-	override val stateParser  by lazy { StateParserS(widgetParser, reader, modelProvider, compatibilityMode, enableChecks) }
+	override val widgetParser by lazy { WidgetParserS(modelProvider, compatibilityMode, enableChecks, enablePrint) }
+	override val stateParser  by lazy { StateParserS(widgetParser, reader, modelProvider, compatibilityMode, enableChecks, enablePrint) }
 	override val stateMap by lazy{ stateParser.idMapping }
 	override val widgetMap by lazy{ widgetParser.idMapping }
 

@@ -6,6 +6,8 @@ import org.droidmate.explorationModel.ConcreteId
 import org.droidmate.explorationModel.config.ModelConfig
 import org.droidmate.explorationModel.config.ConfigProperties
 import org.droidmate.explorationModel.emptyId
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory.getLogger
 import java.io.BufferedReader
 import java.io.FileReader
 import java.lang.IllegalStateException
@@ -17,6 +19,7 @@ import kotlin.streams.toList
 
 
 open class ContentReader(val config: ModelConfig){
+	val logger: Logger = getLogger(this::class.java)
 	@Suppress("UNUSED_PARAMETER")
 	fun log(msg: String)
 	{}
@@ -52,6 +55,7 @@ open class ContentReader(val config: ModelConfig){
 				{ "ERROR on model loading: file ${path.fileName} does not contain any entries" }
 			val scope = CoroutineScope(coroutineContext+ Job())
 			return br.map { line ->
+				logger.debug("process line: \n$line")
 				lineProcessor(line.split(config[ConfigProperties.ModelProperties.dump.sep]).map { it.trim() },scope) }
 		} ?: return emptyList()
 	}

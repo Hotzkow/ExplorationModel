@@ -88,8 +88,8 @@ internal class ModelLoaderT(override val config: ModelConfig)
 	override fun log(msg: String) = println("TestModelLoader[${Thread.currentThread().name}] $msg")
 
 	/** implementing ModelParser default methods */
-	override val widgetParser by lazy { WidgetParserP(modelProvider, compatibilityMode, enableChecks) }
-	override val stateParser  by lazy { StateParserP(widgetParser, reader, modelProvider, compatibilityMode, enableChecks) }
+	override val widgetParser by lazy { WidgetParserP(modelProvider, compatibilityMode, enableChecks, enablePrint) }
+	override val stateParser  by lazy { StateParserP(widgetParser, reader, modelProvider, compatibilityMode, enableChecks, enablePrint) }
 
 	/** custom test environment */
 //	override val actionParser: suspend (List<String>,CoroutineScope) -> Pair<Interaction, State> = processor

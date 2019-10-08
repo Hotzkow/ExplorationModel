@@ -91,7 +91,8 @@ internal class StateParserS<M: AbstractModel<S,W>, S: State<W>, W: Widget>(overr
                                                                 override val reader: ContentReader,
                                                                 override val modelProvider: ModelProvider<M>,
                                                                 override val compatibilityMode: Boolean,
-                                                                override val enableChecks: Boolean) : StateParserI<S, UiElementPropertiesI, M,S,W>() {
+                                                                override val enableChecks: Boolean,
+                                                                override val enablePrint: Boolean) : StateParserI<S, UiElementPropertiesI, M,S,W>() {
 	override val queue: MutableMap<ConcreteId, S> = HashMap()
 
 	override fun P_S_process(id: ConcreteId, coroutineContext: CoroutineContext): S = runBlocking { computeState(id) }
@@ -103,7 +104,8 @@ internal class StateParserP<M: AbstractModel<S,W>, S: State<W>, W: Widget>(overr
                                                     override val reader: ContentReader,
                                                     override val modelProvider: ModelProvider<M>,
                                                     override val compatibilityMode: Boolean,
-                                                    override val enableChecks: Boolean)
+                                                    override val enableChecks: Boolean,
+                                                    override val enablePrint: Boolean)
 	: StateParserI<Deferred<S>, Deferred<UiElementPropertiesI>, M,S,W>() {
 	override val queue: MutableMap<ConcreteId, Deferred<S>> = ConcurrentHashMap()
 
