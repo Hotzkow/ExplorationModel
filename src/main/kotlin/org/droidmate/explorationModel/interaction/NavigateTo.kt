@@ -107,14 +107,14 @@ private fun swipe(distX:Int, distY:Int, area: Rectangle, swipeOffset: Int = 2): 
 		when {
 			distX == 0 -> Pair(middleX, 0) // if we do not have swipe right/left we start the swipe in the middle of the x coordinate
 			distX < 0 -> Pair(leftX + sxOffset, -(max(0,width-sxOffset))) // swipe from left to right (reveal left elements)
-			else -> Pair(width - swipeOffset, width-swipeOffset)
+			else -> Pair(leftX + width - swipeOffset, width-swipeOffset)
 		}
 	}
 	val (sy,mDistY) = with(area) {
 		when {
 			distY == 0 -> Pair(middleY,0)
 			distY < 0 -> Pair(topY + swipeOffset, -(height-swipeOffset)) // swipe from top to bottom (reveal upper elements)
-			else -> Pair(height - swipeOffset, height-swipeOffset)
+			else -> Pair(topY + height - swipeOffset, height-swipeOffset)
 		}
 	}
 
