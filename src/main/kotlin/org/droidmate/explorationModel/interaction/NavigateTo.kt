@@ -40,7 +40,10 @@ fun State<*>.navigateTo(w: Widget, action: (Widget) -> ExplorationAction): Explo
 					println("ERROR invalid state could not find parentHash $waId within this state ${stateId}")
 					return null
 				}
-				a.isVisible // check that we do not try to swipe on a tiny area and require a huge ammount of swipes
+				// for horizontal scroll the hight may be quite low (menue bars) and for vertical scroll the width?
+				a.isVisible && a.visibleBounds.height > 200 && a.visibleBounds.width > 50 && a.visibleBounds.containsX(w.boundaries.leftX) ||
+						a.isVisible && a.visibleBounds.width > 200 && a.visibleBounds.height > 50 && a.visibleBounds.containsY(w.boundaries.topY) ||
+						a.isVisible // check that we do not try to swipe on a tiny area and require a huge ammount of swipes
 						&& a.visibleBounds.height>200 && a.visibleBounds.width>200 -> wa = a
 				else -> {
 					hasAncestor = a.hasParent
