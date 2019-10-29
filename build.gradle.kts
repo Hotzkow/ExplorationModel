@@ -20,6 +20,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 version = "1.4.3"
+group = "org.droidmate"
 
 plugins {
 	id("org.jetbrains.kotlin.jvm") apply true
@@ -28,12 +29,14 @@ plugins {
 apply (plugin= "maven")
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 	maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-	compile ("com.github.hotzkow:platformInterfaceLib") {
+//	compile ("com.github.hotzkow:platformInterfaceLib") {
+	compile("org.droidmate:deviceDaemonLib") {
 		// in theory it should be 'api', but for some reason that does not work for transitive classpath dependencies
 		version {
 			require("[2.4.1, 2.5[")
