@@ -145,7 +145,8 @@ object StringCreator {
 				prevState = get(Interaction<*>::prevState.name) as ConcreteId,
 				resState = get(Interaction<*>::resState.name) as ConcreteId,
 				data = get(Interaction<*>::data.name) as String,
-				actionId = get(Interaction<*>::actionId.name) as Int
+				actionId = get(Interaction<*>::actionId.name) as Int,
+				meta = get(Interaction<*>::meta.name) as String
 		)}
 
 	internal val baseAnnotations: Sequence<WidgetProperty> by lazy {

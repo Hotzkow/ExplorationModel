@@ -32,48 +32,53 @@ typealias DeviceLogs = List<DeviceLog>
 @Suppress("DataClassPrivateConstructor")
 /**
  * @actionId used to map this interaction to the coresponding result screenshot, which is named according to this value
- * @meta do not rely on this parameter as it may be removed or the content changed at any time, it is intended for debugging purposes only
+ * @meta can be used in (extended) Models to store additional information for any interaction
+ * @debugInfo do not rely on this parameter as it may be removed or the content changed at any time, it is intended for debugging purposes only
  */
 open class Interaction<out W: Widget> (
-		@property:Persistent("Action", 1) val actionType: String,
-		@property:Persistent("Interacted Widget", 2, PType.ConcreteId) val targetWidget: W?,
-		@property:Persistent("StartTime", 4, PType.DateTime) val startTimestamp: LocalDateTime,
-		@property:Persistent("EndTime", 5, PType.DateTime) val endTimestamp: LocalDateTime,
-		@property:Persistent("SuccessFul", 6, PType.Boolean) val successful: Boolean,
-		@property:Persistent("Exception", 7) val exception: String,
-		@property:Persistent("Source State", 0, PType.ConcreteId) val prevState: ConcreteId,
-		@property:Persistent("Resulting State", 3, PType.ConcreteId) val resState: ConcreteId,
-		@property:Persistent("Action-Id", 9, PType.Int) val actionId: Int,
-		@property:Persistent("Data", 8) val data: String = "",
-		@property:Persistent("HasResultScreen", 10) val hasResultScreenshot: Boolean = false,
-		val deviceLogs: DeviceLogs = emptyList(),
-		@Suppress("unused") val meta: String = "") {
+	@property:Persistent("Action", 1) val actionType: String,
+	@property:Persistent("Interacted Widget", 2, PType.ConcreteId) val targetWidget: W?,
+	@property:Persistent("StartTime", 4, PType.DateTime) val startTimestamp: LocalDateTime,
+	@property:Persistent("EndTime", 5, PType.DateTime) val endTimestamp: LocalDateTime,
+	@property:Persistent("SuccessFul", 6, PType.Boolean) val successful: Boolean,
+	@property:Persistent("Exception", 7) val exception: String,
+	@property:Persistent("Source State", 0, PType.ConcreteId) val prevState: ConcreteId,
+	@property:Persistent("Resulting State", 3, PType.ConcreteId) val resState: ConcreteId,
+	@property:Persistent("Action-Id", 9, PType.Int) val actionId: Int,
+	@property:Persistent("Data", 8) val data: String = "",
+	@property:Persistent("HasResultScreen", 10) val hasResultScreenshot: Boolean = false,
+	@property:Persistent("Custom",11) val meta: String = "",
+	val deviceLogs: DeviceLogs = emptyList(),
+	@Suppress("unused") val debugInfo: String = "") {
 
-	constructor(res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: W?)
+	constructor(res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: W?, customInfo: String = "")
 			: this(actionType = res.action.name, targetWidget = target,
 			startTimestamp = res.startTimestamp, endTimestamp = res.endTimestamp, successful = res.successful,
 			exception = res.exception, prevState = prevStateId, resState = resStateId, data = computeData(res.action),
-			deviceLogs = res.deviceLogs,	meta = res.action.id.toString(), actionId = res.action.id, hasResultScreenshot = res.guiSnapshot.capturedScreen)
+			deviceLogs = res.deviceLogs,	debugInfo = res.action.id.toString(), actionId = res.action.id,
+		hasResultScreenshot = res.guiSnapshot.capturedScreen, meta = customInfo)
 
 	/** used for ActionQueue entries */
-	constructor(action: ExplorationAction, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: W?)
+	constructor(action: ExplorationAction, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, target: W?, customInfo: String = "")
 			: this(action.name, target, res.startTimestamp,
 			res.endTimestamp, successful = res.successful, exception = res.exception, prevState = prevStateId,
-			resState = resStateId, data = computeData(action), deviceLogs = res.deviceLogs, actionId = action.id, hasResultScreenshot = res.guiSnapshot.capturedScreen)
+			resState = resStateId, data = computeData(action), deviceLogs = res.deviceLogs, actionId = action.id,
+		hasResultScreenshot = res.guiSnapshot.capturedScreen, meta = customInfo)
 
 	/** used for ActionQueue start/end Interaction */
-	internal constructor(actionName:String, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId)
+	internal constructor(actionName:String, res: ActionResult, prevStateId: ConcreteId, resStateId: ConcreteId, customInfo: String = "")
 			: this(actionName, null, res.startTimestamp,
 			res.endTimestamp, successful = res.successful, exception = res.exception, prevState = prevStateId,
-			resState = resStateId, deviceLogs = res.deviceLogs, actionId = res.action.id, hasResultScreenshot = res.guiSnapshot.capturedScreen)
+			resState = resStateId, deviceLogs = res.deviceLogs, actionId = res.action.id,
+		hasResultScreenshot = res.guiSnapshot.capturedScreen, meta = customInfo)
 
 	/** used for parsing from string */
 	constructor(actionType: String, target: W?, startTimestamp: LocalDateTime, endTimestamp: LocalDateTime,
 	            successful: Boolean, exception: String, resState: ConcreteId, prevState: ConcreteId, data: String = "",
-	            actionId: Int, hasResultScreenshot: Boolean = false)
+	            actionId: Int, hasResultScreenshot: Boolean = false, customInfo: String = "")
 			: this(actionType = actionType, targetWidget = target, startTimestamp = startTimestamp, endTimestamp = endTimestamp,
 			successful = successful, exception = exception, prevState = prevState, resState = resState, data = data,
-		actionId = actionId, hasResultScreenshot = hasResultScreenshot)
+		actionId = actionId, hasResultScreenshot = hasResultScreenshot, meta =  customInfo)
 
 
 	/**
@@ -113,5 +118,6 @@ open class Interaction<out W: Widget> (
 	fun copy(prevState: ConcreteId, resState: ConcreteId): Interaction<W>
 		= Interaction(actionType = actionType, targetWidget = targetWidget, startTimestamp = startTimestamp,
 			endTimestamp = endTimestamp, successful = successful, exception = exception,
-			prevState = prevState, resState = resState, data = data, deviceLogs = deviceLogs, meta = meta, actionId = actionId)
+			prevState = prevState, resState = resState, data = data, deviceLogs = deviceLogs, debugInfo = debugInfo,
+		actionId = actionId, meta = meta)
 }
