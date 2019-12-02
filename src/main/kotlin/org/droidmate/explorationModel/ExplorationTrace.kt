@@ -85,6 +85,9 @@ open class ExplorationTrace<S,W>(private val watcher: MutableList<ModelFeatureI>
 		this.targets.addAll(interactedTargets)
 	}
 
+	protected open fun computeActionMetaInformation(action: ExplorationAction,
+	                                                oldState: State<*>, dstState: State<*>): String = ""
+
 	@Suppress("UNCHECKED_CAST")
 	private fun actionProcessor(actionRes: ActionResult, oldState: State<*>, dstState: State<*>) = LinkedList<Interaction<W>>().apply{
 		if(widgetTargets.isNotEmpty())
@@ -93,7 +96,9 @@ open class ExplorationTrace<S,W>(private val watcher: MutableList<ModelFeatureI>
 		if(actionRes.action is ActionQueue)
 			actionRes.action.actions.map {
 				Interaction(it, res = actionRes, prevStateId = oldState.stateId, resStateId = dstState.stateId,
-						target = if(it.hasWidgetTarget) widgetTargets.pollFirst() as? W? else null)
+					target = if(it.hasWidgetTarget) widgetTargets.pollFirst() as? W? else null,
+					customInfo = computeActionMetaInformation(it, oldState, dstState)
+				)
 			}.also {
 				add(Interaction(ActionQueue.startName, res = actionRes, prevStateId = oldState.stateId, resStateId = dstState.stateId))
 				addAll(it)
@@ -101,7 +106,9 @@ open class ExplorationTrace<S,W>(private val watcher: MutableList<ModelFeatureI>
 			}
 		else
 			add( Interaction(res = actionRes, prevStateId = oldState.stateId, resStateId = dstState.stateId,
-					target = if(actionRes.action.hasWidgetTarget) widgetTargets.pollFirst() as? W? else null) )
+				target = if(actionRes.action.hasWidgetTarget) widgetTargets.pollFirst() as? W? else null,
+				customInfo = computeActionMetaInformation(actionRes.action, oldState, dstState)
+			))
 	}.also { interactions ->
 		widgetTargets.clear()
 		P_addAll(interactions)
