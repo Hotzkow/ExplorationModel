@@ -87,6 +87,16 @@ fun State<*>.navigateTo(w: Widget, action: (Widget) -> ExplorationAction): Explo
 	}
 }
 
+/**
+ * Performs a swipe from one coordinate to another coordinate. You can control
+ * the smoothness and speed of the swipe by specifying the number of steps.
+ * Each step execution is throttled to 5 milliseconds per step, so for a 100
+ * steps, the swipe will take around 0.5 seconds to complete.
+ *
+ * @param start  the starting coordinate
+ * @param end the ending coordinate
+ * @param steps is the number of steps for the swipe action
+ */
 fun ExplorationAction.Companion.swipe(start: Pair<Int,Int>,end:Pair<Int,Int>,steps:Int=35): ExplorationAction = Swipe(start, end, steps)
 
 /** this is a helping function to determine the number of swipes to have an overall swipe distance in width [distX] and height [distY]
@@ -129,7 +139,7 @@ private fun swipe(distX:Int, distY:Int, area: Rectangle, swipeOffset: Int = 2): 
 		dx += mx
 		val my = (distY-dy).let{ distToy -> if(abs(distToy) < abs(mDistY)) distToy else mDistY}
 		dy += my
-		actions.add(ExplorationAction.swipe(Pair(sx,sy), Pair(sx-mx,sy-my), steps = 10))
+		actions.add(ExplorationAction.swipe(Pair(sx,sy), Pair(sx-mx,sy-my), steps = 20))
 	}
 
 	return actions

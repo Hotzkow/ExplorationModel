@@ -63,18 +63,19 @@ val emptyId = ConcreteId(emptyUUID, emptyUUID)
 /** string sanitation functions */
 fun String.removeNewLineAndSemicolon() = replace(Regex("\\r\\n|\\r|\\n")," ").replace(";"," ")
 
-fun String.sanitize(): String =
+fun String.sanitize(keepDigits: Boolean = false): String =
 	removeNewLineAndSemicolon()
 		.replace("<newline>", " ").replace("<semicolon>"," ")
-		.replace("\\s+", " ").splitOnCaseSwitch().split(" ").distinct().filter { it.isNotBlank() }
+		.replace("\\s+", " ").splitOnCaseSwitch(keepDigits).split(" ").distinct().filter { it.isNotBlank() }
 		.joinToString(separator = " ") { it.trim() }  // erase redundant spaces
 
-fun String.splitOnCaseSwitch(): String{
+fun String.splitOnCaseSwitch(keepDigits: Boolean = false): String{
 	if(this.isBlank()) return ""
 	var newString = ""
 	this.forEachIndexed { i, c ->
 		newString += when{
 			c.isWhitespace() || c=='_' || c=='/' || c=='.' || c=='-' || c==',' -> " "
+			keepDigits && c.isDigit() -> c
 			!c.isLetter() -> ""
 			c.isUpperCase() && i>0 && this[i-1].isLowerCase() -> " $c"
 			else -> c

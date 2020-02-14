@@ -139,7 +139,7 @@ open class Widget private constructor(properties: UiElementPropertiesI,
 				"${resourceId.ifNotEmpty("resId")}, inputType=$inputType $visibleBounds]"
 	}
 
-	/**----------------------------------- final properties from ui extraction -----------------------------------------*/
+	/* ----------------------------------- final properties from ui extraction -----------------------------------------*/
 
 	final override val imgId: Int = properties.imgId
 	final override val visibleBounds: org.droidmate.deviceInterface.exploration.Rectangle = properties.visibleBounds
