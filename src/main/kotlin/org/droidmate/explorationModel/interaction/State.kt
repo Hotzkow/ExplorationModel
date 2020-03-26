@@ -90,10 +90,12 @@ open class State<out W: Widget> (_widgets: Collection<W>, val isHomeScreen: Bool
 	open val isRequestRuntimePermissionDialogBox: Boolean	by lazy {
 		widgets.any { // identify if we have a permission request
 			it.isVisible && 		// permission request are always visible on the current screen
-					(it.resourceId.startsWith(resIdRuntimePermissionDialog)  ||
-					// handle cases for apps who 'customize' this request and use own resourceIds e.g. Home-Depot
+					(resIdRuntimePermissionDialog.any { resId -> it.resourceId.startsWith(resId) } ||
 					when(it.text.toUpperCase()) {
+						// handle cases for apps who 'customize' this request and use own resourceIds e.g. Home-Depot
 						"ALLOW", "DENY", "DON'T ALLOW" -> true
+						// android Q support
+						"ALLOW ALL THE TIME", "ALLOW ONLY WHILE USING THE APP" -> true
 						else -> false
 					})
 		}
@@ -121,7 +123,8 @@ open class State<out W: Widget> (_widgets: Collection<W>, val isHomeScreen: Bool
 	internal fun widgetsDump(sep: String) = widgets.map{ StringCreator.createPropertyString(it, sep) }
 
 	companion object {
-		private const val resIdRuntimePermissionDialog = "com.android.packageinstaller:id/"
+		private val resIdRuntimePermissionDialog =
+			listOf("com.android.packageinstaller:id/", "com.android.permissioncontroller:id/")
 
 
 		/** dummy element if a state has to be given but no widget data is available */
