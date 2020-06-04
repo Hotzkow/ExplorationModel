@@ -35,8 +35,8 @@ repositories {
 }
 
 dependencies {
-//	compile ("com.github.hotzkow:platformInterfaceLib") {
-	compile("org.droidmate:deviceDaemonLib") {
+	compile ("com.github.hotzkow:platformInterfaceLib") {
+//	compile("org.droidmate:deviceDaemonLib") {
 		// in theory it should be 'api', but for some reason that does not work for transitive classpath dependencies
 		version {
 			require("[2.4.1, 2.5[")
