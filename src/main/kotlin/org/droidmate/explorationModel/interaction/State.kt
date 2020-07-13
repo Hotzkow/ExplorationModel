@@ -76,7 +76,7 @@ open class State<out W: Widget> (_widgets: Collection<W>, val isHomeScreen: Bool
 	 * non-text elements are only considered if they can be acted upon or are leaf elements
 	 */
 	protected open fun isRelevantForId(w: Widget): Boolean = ( !isHomeScreen && !w.isKeyboard
-			&& (w.nlpText.isNotBlank() || w.isInteractive || w.isLeaf()	)
+			&& w.definedAsVisible && (w.nlpText.isNotBlank() || w.isInteractive || w.isLeaf()	)
 			)
 
 
