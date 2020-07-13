@@ -19,7 +19,7 @@
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-version = "1.4.3"
+version = "1.4.4"
 group = "org.droidmate"
 
 plugins {
