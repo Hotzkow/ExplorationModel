@@ -192,6 +192,29 @@ open class ExplorationTrace<S,W>(private val watcher: MutableList<ModelFeatureI>
 		return trace.getOrNull { it.lastOrNull() }
 	}
 
+	/**
+	 * in contrast to [last] this method returns a list containing exactly the last action or
+	 * in case the last entry was action queue all actions which belong to this queue
+	 */
+	suspend fun lastActionSequence(): List<Interaction<W>> {
+		val actions: List<Interaction<W>> = trace.getAll()
+		val res = mutableListOf<Interaction<W>>()
+		val last = actions.lastOrNull() ?: return emptyList()
+		if (last.actionType.isQueueEnd()){
+			var numQueues = 1
+			var idx = actions.size-2
+			while (idx >= 0 && numQueues > 0){
+				val a = actions[idx--]
+				when {
+					a.actionType.isQueueEnd() -> numQueues++
+					a.actionType.isQueueStart() -> numQueues --
+					else -> res.add(a)
+				}
+			}
+		} else res.add(last)
+		return res
+	}
+
 	/** this has to access a co-routine actor prefer using [size] if synchronization is not critical */
 	suspend fun isEmpty(): Boolean{
 		return trace.get { it.isEmpty() }

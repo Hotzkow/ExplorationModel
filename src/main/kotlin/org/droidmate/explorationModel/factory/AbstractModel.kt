@@ -139,12 +139,19 @@ abstract class AbstractModel<S,W>: CoroutineScope where S: State<W>, W: Widget {
 
 	private fun generateWidgets(action: ActionResult, @Suppress("UNUSED_PARAMETER") trace: ExplorationTrace<S,W>): Collection<W>{
 		val elements: Map<Int, UiElementPropertiesI> = action.guiSnapshot.widgets.associateBy { it.idHash }
+		return generateWidgets(action, elements)
+	}
+
+	open fun generateWidgets(action: ActionResult, elements: Map<Int, UiElementPropertiesI>): Collection<W>{
 		return generateWidgets(elements)
 	}
 
 	/** used on model update to compute the list of UI elements contained in the current UI screen ([State]).
 	 *  used by ModelParser to create [Widget] object from persisted data
 	 */
+	@Deprecated("this function signature will change " +
+			"please use generateWidgets(action: ActionResult, elements: Map<Int, UiElementPropertiesI>) instead",
+			replaceWith = ReplaceWith("generateWidgets(action, elements)"))
 	open fun generateWidgets(elements: Map<Int, UiElementPropertiesI>): Collection<W>{
 		val widgets = HashMap<Int,W>()
 		val workQueue = LinkedList<UiElementPropertiesI>().apply {

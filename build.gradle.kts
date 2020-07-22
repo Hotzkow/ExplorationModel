@@ -19,7 +19,7 @@
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-version = "1.4.4"
+version = "1.5.0"
 group = "org.droidmate"
 
 plugins {
@@ -39,7 +39,7 @@ dependencies {
 //	compile("org.droidmate:deviceDaemonLib") {
 		// in theory it should be 'api', but for some reason that does not work for transitive classpath dependencies
 		version {
-			require("[2.4.1, 2.5[")
+			require("[2.4.1, 2.6[")
 		}
 	}
 

@@ -46,7 +46,7 @@ class ModelConfig private constructor(path: Path,
                                       private val config: Configuration,
                                       @Suppress("MemberVisibilityCanBePrivate") // used by some model features to restore/load their state
                                       val isLoadC: Boolean = false) : Configuration by config {
-	/** @path path-string locationg the base directory where all model data is supposed to be dumped */
+	/** @path path-string locating the base directory where all model data is supposed to be dumped */
 
 	constructor(path: Path, appName: String, isLoadC: Boolean = false): this(path.toAbsolutePath(), appName, resourceConfig, isLoadC)
 

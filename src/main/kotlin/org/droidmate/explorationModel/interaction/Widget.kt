@@ -30,7 +30,7 @@ import java.util.*
 import kotlin.collections.HashMap
 
 @Suppress("unused")
-open class Widget private constructor(properties: UiElementPropertiesI,
+open class Widget protected constructor(properties: UiElementPropertiesI,
                               val parentId: ConcreteId?, overrideId: ConcreteId?): UiElementPropertiesI {
 
 	constructor(properties: UiElementPropertiesI, parentId: ConcreteId?): this(properties,parentId,null)
@@ -111,10 +111,30 @@ open class Widget private constructor(properties: UiElementPropertiesI,
 		return relevantProperties.joinToString("<;>").toUUID()
 	}
 
+	@JvmOverloads open fun <W: Widget> copy(boundaries: Rectangle, visibleBounds:Rectangle,
+											  defVisible:Boolean, id:ConcreteId?,
+											  init: (properties: UiElementPropertiesI)-> W ): W{
+		val properties: MutableMap<String,Any?> = HashMap()
+		StringCreator.annotatedProperties.forEach { p ->
+			properties[p.property.name] = p.property.call(this)
+		}
+		properties[this::boundaries.name] = boundaries
+		properties[this::visibleBounds.name] = visibleBounds
+		properties[this::definedAsVisible.name] = defVisible
+
+		return init(UiElementP(properties))
+	}
 
 	companion object {
 		/** used for dummy initializations, if nullable is undesirable */
 		internal val emptyWidget by lazy{ Widget(DummyProperties,null) }
+
+		fun <W: Widget> W.copy(boundaries: Rectangle = this.boundaries, visibleBounds:Rectangle = this.visibleBounds,
+							   defVisible:Boolean=this.definedAsVisible, id:ConcreteId? = null,
+							   init: (properties: UiElementPropertiesI)-> W = {
+								   properties ->
+								   Widget(properties, parentId, id) as W
+							   }): W = copy(boundaries, visibleBounds, defVisible, id, init)
 	}
 
 	/*** overwritten functions ***/
@@ -170,17 +190,9 @@ open class Widget private constructor(properties: UiElementPropertiesI,
 	final override val definedAsVisible: Boolean = properties.definedAsVisible
 	final override val hasUncoveredArea: Boolean = properties.hasUncoveredArea
 
-	@JvmOverloads open fun copy(boundaries: Rectangle = this.boundaries, visibleBounds:Rectangle = this.visibleBounds,
-	                       defVisible:Boolean=this.definedAsVisible, id:ConcreteId? = null): Widget{
-		val properties: MutableMap<String,Any?> = HashMap()
-		StringCreator.annotatedProperties.forEach { p ->
-			properties[p.property.name] = p.property.call(this)
-		}
-		properties[this::boundaries.name] = boundaries
-		properties[this::visibleBounds.name] = visibleBounds
-		properties[this::definedAsVisible.name] = defVisible
-		return Widget(UiElementP(properties),parentId,id)
-	}
+
 	/* end override */
 
 }
+
+

@@ -7,6 +7,7 @@ import org.droidmate.deviceInterface.exploration.ExplorationAction
 import org.droidmate.deviceInterface.exploration.Rectangle
 import org.droidmate.deviceInterface.exploration.Swipe
 import org.droidmate.explorationModel.debugOut
+import org.droidmate.explorationModel.interaction.Widget.Companion.copy
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.max
