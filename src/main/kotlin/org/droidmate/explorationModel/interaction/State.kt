@@ -99,7 +99,7 @@ open class State<out W: Widget> (_widgets: Collection<W>, val isHomeScreen: Bool
 		}
 				// check that we have a ok or allow button
 				&& widgets.any{it.isVisible && it.text.toUpperCase().let{ wText -> wText == "ALLOW"
-				|| wText == "OK" || wText == "ALLOW ALL THE TIME"} }
+				|| wText == "OK" || wText == "ALLOW ALL THE TIME" || wText == "CONTINUE"} }
 	}
 
 
