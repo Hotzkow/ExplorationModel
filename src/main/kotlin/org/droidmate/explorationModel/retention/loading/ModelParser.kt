@@ -123,9 +123,11 @@ internal abstract class ModelParserI<T,DeferredState,DeferredWidget,M: AbstractM
 		// start producer who just sends trace paths to the multiple trace processor jobs
 		val producer = traceProducer()
 		logger.debug("producer successfully launched")
+		val tasks = mutableSetOf<Job>()
 		repeat(if(isSequential) 1 else 5){  // process up to 5 exploration traces in parallel
-			launch { traceProcessor( producer, watcher )}
+			tasks.add(launch { traceProcessor( producer, watcher )})
 		}
+		tasks.forEach{ it.join() }
 		clearQueues()
 		return@withContext model
 	}
