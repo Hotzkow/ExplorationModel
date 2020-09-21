@@ -48,7 +48,11 @@ class ModelConfig private constructor(path: Path,
                                       val isLoadC: Boolean = false) : Configuration by config {
 	/** @path path-string locating the base directory where all model data is supposed to be dumped */
 
-	constructor(path: Path, appName: String, isLoadC: Boolean = false): this(path.toAbsolutePath(), appName, resourceConfig, isLoadC)
+	constructor(resCfg: ConfigurationProperties, path: Path, appName: String, isLoadC: Boolean = false):
+			this(path.toAbsolutePath(), appName, resCfg, isLoadC)
+
+	constructor(path: Path, appName: String, isLoadC: Boolean = false):
+			this(path.toAbsolutePath(), appName, resourceConfig, isLoadC)
 
 	val baseDir: Path = path.resolve(appName)  // directory path where the model file(s) should be stored
 	val stateDst: Path = baseDir.resolve(config[statesSubDir].path)       // each state gets an own file named according to UUID in this directory
@@ -89,13 +93,22 @@ class ModelConfig private constructor(path: Path,
 			ConfigurationProperties.configFromResource("/defaultModelConfig.properties")
 		}
 
-		@JvmOverloads operator fun invoke(appName: String, isLoadC: Boolean = false, cfg: Configuration? = null): ModelConfig {
+		@JvmOverloads operator fun invoke(
+				resCfg: ConfigurationProperties,
+				appName: String,
+				isLoadC: Boolean = false,
+				cfg: Configuration? = null
+		): ModelConfig {
 			val (config, path) = if (cfg != null)
-				Pair(cfg overriding resourceConfig, Paths.get(cfg[outputDir].toString()).resolve("model"))
+				Pair(cfg overriding resCfg, Paths.get(cfg[outputDir].toString()).resolve("model"))
 			else
-				Pair(resourceConfig, Paths.get(resourceConfig[defaultBaseDir].toString()))
+				Pair(resCfg, Paths.get(resCfg[defaultBaseDir].toString()))
 
 			return ModelConfig(path, appName, config, isLoadC)
+		}
+
+		@JvmOverloads operator fun invoke(appName: String, isLoadC: Boolean = false, cfg: Configuration? = null): ModelConfig {
+			return invoke(resourceConfig, appName, isLoadC, cfg)
 		}
 
 	} /** end COMPANION **/
